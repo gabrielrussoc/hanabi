@@ -3,12 +3,14 @@ import { useState, useEffect } from 'react';
 import logo from './logo.svg';
 import './App.css';
 
+import {Greeter} from 'hanabi-types';
+
 function App() {
   const [title, setTitle] = useState("Loading...");
   useEffect(() => {
     async function getTitle() {
       const title = await (await fetch('/api/')).text();
-      setTitle(title);
+      setTitle(Greeter(title));
     }
     getTitle();
   });
