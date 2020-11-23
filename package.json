@@ -1,0 +1,8 @@
+{
+  "name": "hanabi",
+  "version": "0.0.1",
+  "description": "Homemade non-commercial implementation of Hanabi",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
