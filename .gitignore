@@ -1,3 +1,4 @@
 **/node_modules/**
 server/bin/**
 client/build/**
+**/.eslintcache
