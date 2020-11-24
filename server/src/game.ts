@@ -1,5 +1,6 @@
 import { CardNotFoundError, NotEnoughHintsError, UnknownPlayerError, WrongTurnError } from './errors';
 import { LobbyId } from './lobby';
+import { Cookie } from './cookie';
 
 export enum Color {
     RED,
@@ -80,19 +81,6 @@ export class Discard {
     }
 }
 
-export class Cookie {
-    #value: string;
-
-    constructor(value: string) {
-        this.#value = value;
-    }
-
-    equals(other: Cookie): boolean {
-        return this.#value === other.#value;
-    }
-}
-
-
 export class Player {
     // Cards are 0-indexed
     #cardsInOrder: Card[];
@@ -140,10 +128,10 @@ export enum GameOver {
 //                       x  1  2  3  4  5
 const CARDS_PER_VALUE = [0, 3, 2, 2, 2, 1]
 
-function shuffleInPlace(cards: Card[]) {
-    for (let i = cards.length - 1; i > 0; i--) {
+function shuffleInPlace(arr: any[]) {
+    for (let i = arr.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [cards[i], cards[j]] = [cards[j], cards[i]];
+        [arr[i], arr[j]] = [arr[j], arr[i]];
     }
 }
 
@@ -190,7 +178,8 @@ export class Game {
         this.#fireworks = new Fireworks();
         this.#discard = new Discard();
 
-        // Let's say player 0 always starts
+        // Randomize the starting order of the players
+        shuffleInPlace(cookies);
         this.#currentPlaying = 0;
         this.#isLastRound = false;
         this.#remainingCards = generateAllCards();

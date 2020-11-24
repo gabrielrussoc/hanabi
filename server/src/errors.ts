@@ -21,3 +21,22 @@ export class CardNotFoundError extends Error {
         super(m);
     }
 }
+
+export class PlayerCookieNotFoundError extends Error {
+    constructor(m: string) {
+        super(m);
+    }
+}
+
+export class TooManyPlayersError extends Error {
+    constructor(m: string) {
+        super(m);
+    }
+}
+
+export class GameInProgressError extends Error {
+    constructor(m: string) {
+        super(m);
+    }
+}
+
