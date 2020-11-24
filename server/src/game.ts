@@ -1,4 +1,5 @@
 import { CardNotFoundError, NotEnoughHintsError, UnknownPlayerError, WrongTurnError } from './errors';
+import { LobbyId } from './lobby';
 
 export enum Color {
     RED,
@@ -94,7 +95,7 @@ export class Cookie {
 
 export class Player {
     // Cards are 0-indexed
-    #cardsInOrder: Array<Card>;
+    #cardsInOrder: Card[];
 
     // Index of the player on a room. Used to track turns.
     readonly index: number;
@@ -103,7 +104,7 @@ export class Player {
     // Used to validate players (for reconnecting, etc).
     readonly cookie: Cookie;
 
-    constructor(cardsInOrder: Array<Card>, index: number, cookie: Cookie) {
+    constructor(cardsInOrder: Card[], index: number, cookie: Cookie) {
         this.#cardsInOrder = cardsInOrder;
         this.index = index;
         this.cookie = cookie;
@@ -126,23 +127,6 @@ export class Player {
     }
 }
 
-export class RoomId {
-    #value: string;
-
-    constructor() {
-        // well, it works
-        this.#value = '';
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        for (let i = 0; i < 4; i++) {
-            this.#value += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-    }
-
-    string(): string {
-        return this.#value;
-    }
-}
-
 export enum GameOver {
     ZeroLives,
     NoMoreCards,
@@ -156,15 +140,15 @@ export enum GameOver {
 //                       x  1  2  3  4  5
 const CARDS_PER_VALUE = [0, 3, 2, 2, 2, 1]
 
-function shuffleInPlace(cards: Array<Card>) {
+function shuffleInPlace(cards: Card[]) {
     for (let i = cards.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [cards[i], cards[j]] = [cards[j], cards[i]];
     }
 }
 
-function generateAllCards(): Array<Card> {
-    let cards = [];
+function generateAllCards(): Card[] {
+    const cards = [];
     for (let value = 1; value <= 5; value++) {
         const copies = CARDS_PER_VALUE[value];
         for (let i = 0; i < copies; i++) {
@@ -180,13 +164,14 @@ function generateAllCards(): Array<Card> {
     return cards;
 }
 
-// A room is effectively a game. 
+// An instance of a Hanabi game
 // It holds player information, hints, lives, discard, etc
-export class Room {
-    readonly id: RoomId;
+export class Game {
+    // The lobby this game is associated with
+    readonly id: LobbyId;
 
     // Information about the players
-    readonly #playersInOrder: Array<Player>;
+    readonly #playersInOrder: Player[];
     #currentPlaying: number;
     #isLastRound: boolean;
     #lastRoundRemaining: number;
@@ -196,12 +181,12 @@ export class Room {
 
     #hints = this.#MAX_HINTS;
     #lives = 3;
-    #remainingCards: Array<Card>;
+    #remainingCards: Card[];
     #fireworks: Fireworks;
     #discard: Discard;
 
-    constructor(cookies: Array<Cookie>) {
-        this.id = new RoomId();
+    constructor(id: LobbyId, cookies: Cookie[]) {
+        this.id = id;
         this.#fireworks = new Fireworks();
         this.#discard = new Discard();
 
@@ -214,7 +199,7 @@ export class Room {
         const numPlayers = cookies.length;
         const cardsPerPlayer = numPlayers > 3 ? 4 : 5;
         for (let i = 0; i < numPlayers; i++) {
-            let cards = [];
+            const cards = [];
             for (let j = 0; j < cardsPerPlayer; j++) {
                 const card = this.#remainingCards.pop();
                 if (card !== undefined) { // should always be true
