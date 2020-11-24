@@ -1,7 +1,7 @@
 import { CardNotFoundError, NotEnoughHintsError, UnknownPlayerError, WrongTurnError } from './errors';
 import { LobbyId } from './lobby';
 import { Cookie } from './cookie';
-import { Map as ImmutableMap, ValueObject, hash } from 'immutable';
+import { List as ImmutableList, Map as ImmutableMap, ValueObject, hash } from 'immutable';
 
 export enum Color {
     RED,
@@ -95,7 +95,7 @@ export class Discard {
 
 export class Player {
     // Cards are 0-indexed
-    #cardsInOrder: Card[];
+    #cardsInOrder: ImmutableList<Card>;
 
     // Index of the player on a room. Used to track turns.
     readonly index: number;
@@ -105,7 +105,7 @@ export class Player {
     readonly cookie: Cookie;
 
     constructor(cardsInOrder: Card[], index: number, cookie: Cookie) {
-        this.#cardsInOrder = cardsInOrder;
+        this.#cardsInOrder = ImmutableList(cardsInOrder);
         this.index = index;
         this.cookie = cookie;
     }
@@ -115,14 +115,14 @@ export class Player {
         if (index === -1) {
             throw new CardNotFoundError("Player doesn't have the card");
         }
-        this.#cardsInOrder.splice(index, 1 /* amount */);
+        this.#cardsInOrder = this.#cardsInOrder.delete(index);
     }
 
     addCard(card: Card) {
-        this.#cardsInOrder.push(card);
+        this.#cardsInOrder = this.#cardsInOrder.push(card);
     }
 
-    cards(): ReadonlyArray<Card> {
+    cards(): ImmutableList<Card> {
         return this.#cardsInOrder;
     }
 }
@@ -213,7 +213,7 @@ export class Game {
     }
 
     private validateTurn(player: Player) {
-        if (this.#playersInOrder.indexOf(player) === -1) {
+        if (this.#playersInOrder.findIndex((p) => p.cookie.equals(player.cookie)) === -1) {
             throw new UnknownPlayerError("Unknown player");
         }
         if (this.#currentPlaying !== player.index) {
