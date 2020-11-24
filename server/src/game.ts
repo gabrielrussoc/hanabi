@@ -42,13 +42,13 @@ export class Fireworks {
 
     tryPlayCard(card: Card): PlayResult {
         const color = card.color;
-        const current_value = this.#inner.get(color) ?? 0;
-        const new_value = card.value;
+        const currentValue = this.#inner.get(color) ?? 0;
+        const newValue = card.value;
 
-        if (current_value + 1 == new_value) {
-            this.#inner.set(color, new_value);
+        if (currentValue + 1 === newValue) {
+            this.#inner.set(color, newValue);
             this.#score += 1;
-            return new_value == 5 ? PlayResult.ColorCompleted : PlayResult.Successful;
+            return newValue === 5 ? PlayResult.ColorCompleted : PlayResult.Successful;
         }
         return PlayResult.Unsuccessful;
     }
@@ -58,7 +58,7 @@ export class Fireworks {
     }
 
     win(): boolean {
-        return this.score() == this.#MAXIMUM_SCORE;
+        return this.score() === this.#MAXIMUM_SCORE;
     }
 }
 
@@ -215,7 +215,7 @@ export class Game {
         if (this.#playersInOrder.indexOf(player) === -1) {
             throw new UnknownPlayerError("Unknown player");
         }
-        if (this.#currentPlaying != player.index) {
+        if (this.#currentPlaying !== player.index) {
             throw new WrongTurnError("It's not your turn!");
         }
     }
@@ -248,9 +248,9 @@ export class Game {
 
     private removeAndDraw(player: Player, card: Card) {
         player.removeCard(card);
-        const new_card = this.#remainingCards.pop();
-        if (new_card !== undefined) {
-            player.addCard(new_card);
+        const newCard = this.#remainingCards.pop();
+        if (newCard !== undefined) {
+            player.addCard(newCard);
         } else {
             this.#isLastRound = true;
         }
