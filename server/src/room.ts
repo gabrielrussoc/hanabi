@@ -1,3 +1,5 @@
+import { CardNotFoundError, NotEnoughHintsError, UnknownPlayerError, WrongTurnError } from './errors';
+
 export enum Color {
     RED,
     YELLOW,
@@ -89,11 +91,6 @@ export class Cookie {
     }
 }
 
-class CardNotFoundError extends Error {
-    constructor(m: string) {
-        super(m);
-    }
-}
 
 export class Player {
     // Cards are 0-indexed
@@ -152,24 +149,6 @@ export enum GameOver {
     FireworksComplete
 }
 
-class UnknownPlayerError extends Error {
-    constructor(m: string) {
-        super(m);
-    }
-}
-
-class WrongTurnError extends Error {
-    constructor(m: string) {
-        super(m);
-    }
-}
-
-class NotEnoughHintsError extends Error {
-    constructor(m: string) {
-        super(m);
-    }
-}
-
 // Amount of cards per value
 // I.e. we have 1 five of every color
 // 2 fours of every color
@@ -204,7 +183,7 @@ function generateAllCards(): Array<Card> {
 // A room is effectively a game. 
 // It holds player information, hints, lives, discard, etc
 export class Room {
-    #id: RoomId;
+    readonly id: RoomId;
 
     // Information about the players
     readonly #playersInOrder: Array<Player>;
@@ -222,7 +201,7 @@ export class Room {
     #discard: Discard;
 
     constructor(cookies: Array<Cookie>) {
-        this.#id = new RoomId();
+        this.id = new RoomId();
         this.#fireworks = new Fireworks();
         this.#discard = new Discard();
 
