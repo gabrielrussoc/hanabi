@@ -79,6 +79,8 @@ class Lobby {
 
         io.on('connection', (socket) => {
             const playerCookie = playerCookieFromRaw(socket.handshake.headers.cookie);
+            console.log('user ' + playerCookie + ' connected to ' + this.#id.string());
+            socket.emit('greet', 'Hello from the Server :)');
             this.maybeAddPlayer(playerCookie);
             socket.on('disconnect', () => {
                 this.maybeRemovePlayer(playerCookie);
