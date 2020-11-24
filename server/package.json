@@ -3,8 +3,7 @@
   "version": "0.0.1",
   "description": "Homemade non-commercial implementation of Hanabi",
   "dependencies": {
-    "express": "^4.17.1",
-    "hanabi-types": "file:../hanabi-types"
+    "express": "^4.17.1"
   },
   "scripts": {
     "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
