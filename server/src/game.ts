@@ -1,6 +1,7 @@
 import { CardNotFoundError, NotEnoughHintsError, UnknownPlayerError, WrongTurnError } from './errors';
 import { LobbyId } from './lobby';
 import { Cookie } from './cookie';
+import { Map as ImmutableMap, ValueObject, hash } from 'immutable';
 
 export enum Color {
     RED,
@@ -10,9 +11,20 @@ export enum Color {
     WHITE
 }
 
-export class Card {
+export class Card implements ValueObject {
     color: Color;
     value: number;
+
+    equals(other: Card): boolean {
+        return this.value === other.value && this.color === other.color;
+    }
+
+    hashCode(): number {
+        let val = 17;
+        val = val * 37 + hash(this.color);
+        val = val * 37 + hash(this.value);
+        return val | 0;
+    }
 
     constructor(color: Color, value: number) {
         this.color = color;
@@ -31,13 +43,13 @@ enum PlayResult {
 
 export class Fireworks {
     // Amount of cards per color (aka highest card of each color)
-    #inner: Map<Color, number>;
+    #inner: ImmutableMap<Color, number>;
     #score: number;
 
     readonly #MAXIMUM_SCORE = 25;
 
     constructor() {
-        this.#inner = new Map();
+        this.#inner = ImmutableMap();
         this.#score = 0;
     }
 
@@ -47,7 +59,7 @@ export class Fireworks {
         const newValue = card.value;
 
         if (currentValue + 1 === newValue) {
-            this.#inner.set(color, newValue);
+            this.#inner = this.#inner.set(color, newValue);
             this.#score += 1;
             return newValue === 5 ? PlayResult.ColorCompleted : PlayResult.Successful;
         }
@@ -65,15 +77,15 @@ export class Fireworks {
 
 export class Discard {
     // number of discarded cards
-    #inner: Map<Card, number>;
+    #inner: ImmutableMap<Card, number>;
 
     constructor() {
-        this.#inner = new Map();
+        this.#inner = ImmutableMap();
     }
 
     discard(card: Card) {
         const value = this.#inner.get(card) ?? 0;
-        this.#inner.set(card, value + 1);
+        this.#inner = this.#inner.set(card, value + 1);
     }
 
     status(): ReadonlyMap<Card, number> {

@@ -3,6 +3,7 @@ import { Server as HttpServer } from "http";
 import { Cookie, playerCookieFromRaw } from "./cookie";
 import { Game } from "./game";
 import { GameInProgressError, TooManyPlayersError } from "./errors";
+import { Set as ImmutableSet } from 'immutable';
 
 const MIN_PLAYERS = 2;
 const MAX_PLAYERS = 5;
@@ -40,7 +41,7 @@ class Lobby {
     #game: Game | undefined;
 
     // Players connected
-    #players: Set<Cookie> = new Set();
+    #players: ImmutableSet<Cookie> = ImmutableSet();
 
     // A player can be added if:
     // - The number of players hasn't reached the maximum
@@ -61,7 +62,8 @@ class Lobby {
         if (this.#players.size === MAX_PLAYERS) {
             throw new TooManyPlayersError("Lobby is full");
         }
-        this.#players.add(player);
+        console.log(player.printable() + ' is a new player');
+        this.#players = this.#players.add(player);
     }
 
     // Only removes players from games that were not started.
@@ -71,7 +73,7 @@ class Lobby {
             // Nothing to do. Player disconnected but might still come back.
             return;
         }
-        this.#players.delete(player);
+        this.#players = this.#players.delete(player);
     }
 
     private setMessageHandlers() {
@@ -79,7 +81,8 @@ class Lobby {
 
         io.on('connection', (socket) => {
             const playerCookie = playerCookieFromRaw(socket.handshake.headers.cookie);
-            console.log('user ' + playerCookie + ' connected to ' + this.#id.string());
+            console.log('user ' + playerCookie.printable() + ' connected to ' + this.#id.string());
+            console.log('total players ' + this.#players.size);
             socket.emit('greet', 'Hello from the Server :)');
             this.maybeAddPlayer(playerCookie);
             socket.on('disconnect', () => {

@@ -1,9 +1,10 @@
 import cookie from 'cookie';
 import { PlayerCookieNotFoundError } from './errors';
+import { hash, ValueObject } from 'immutable';
 
 const PLAYER_COOKIE = 'hanabi_player';
 
-export class Cookie {
+export class Cookie implements ValueObject {
     #value: string;
 
     constructor(value: string) {
@@ -12,6 +13,14 @@ export class Cookie {
 
     equals(other: Cookie): boolean {
         return this.#value === other.#value;
+    }
+
+    hashCode(): number {
+        return hash(this.#value);
+    }
+
+    printable(): string {
+        return this.#value.slice(-5);
     }
 }
 
