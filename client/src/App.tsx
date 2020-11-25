@@ -61,11 +61,28 @@ function Lobby() {
   // React might ignore this anytime and create new connections for each render
   // The server must be able to deal with reconnections.
   const io = useMemo(() => SocketIO({ path: '/lobby/' + id }), [id]);
-  const [greet, setGreet] = useState('loading');
+  const emptyLobby: ILobby = {
+    // TODO: timeout here for lobby not found
+    id: "Looking for lobby...",
+    players: [],
+  }
+  const [lobby, setLobby] = useState(emptyLobby);
   io.on('state', (lobby: ILobby) => {
-    setGreet(JSON.stringify(lobby));
+    setLobby(lobby);
   });
-  return <h1>{greet}</h1>;
+  // TODO: hide start button for non leader
+  // TODO: Give feedback when game can't be started (i.e. not enough players)
+  const isLeader = true;
+  return (
+    <div>
+      <h1>{lobby.id}</h1>
+      <ul>
+        {lobby.players.map(p => <li>{p.name}</li>)}
+      </ul>
+      {isLeader && <button onClick={() => io.emit('start')}>Start</button>}
+      {lobby.game !== undefined ? "STARTED" : "PENDING"}
+    </div>
+  );
 }
 
 function NotFound() {

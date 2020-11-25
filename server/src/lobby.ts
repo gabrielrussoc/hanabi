@@ -93,23 +93,28 @@ class Lobby {
             console.log('user ' + playerCookie.printable() + ' connected to ' + this.#id.string());
             console.log('total players ' + this.#players.size);
             this.maybeAddPlayer(playerCookie);
-            socket.emit('state', this.publicState());
+            io.emit('state', this.publicState());
+
             socket.on('disconnect', () => {
                 console.log('user ' + playerCookie.printable() + ' disconnected from ' + this.#id.string());
                 this.maybeRemovePlayer(playerCookie);
+                io.emit('state', this.publicState());
             });
-        });
 
-        io.on('start', (socket) => {
-            const playerCookie = playerCookieFromRaw(socket.handshake.headers.cookie);
-            // Only the leader can start the game
-            if (!this.#gameStarted && playerCookie.equals(this.#leader) && this.#players.size >= MIN_PLAYERS) {
-                this.#gameStarted = true;
-                this.#game = new Game(this.#id, [...this.#players]);
+            // If this is the leader, we also register an start handler
+            if (playerCookie.equals(this.#leader)) {
+                console.log('Registering start handler for ' + playerCookie.printable() + ' on ' + this.#id.string());
+                socket.on('start', () => {
+                    // TODO: return errors for invalid starts
+                    if (!this.#gameStarted && this.#players.size >= MIN_PLAYERS) {
+                        console.log('Game started on lobby ' + this.#id.string());
+                        this.#gameStarted = true;
+                        this.#game = new Game(this.#id, [...this.#players]);
+                        io.emit('state', this.publicState());
+                    }
+                })
             }
-            // We ignore if someone tries to start the game wrongly.
-            // TODO: send the updated state
-        })
+        });
     }
 
     constructor(leader: Cookie, server: HttpServer) {
