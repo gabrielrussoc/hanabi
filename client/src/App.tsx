@@ -9,6 +9,7 @@ import {
   Route,
   Link,
   useParams,
+  Redirect,
 } from "react-router-dom";
 import SocketIO from 'socket.io-client';
 import { ILobby } from 'hanabi-interface';
@@ -38,17 +39,35 @@ function App() {
   );
 }
 
+function createLobby() {
+
+}
+
 function Home() {
   const [lobby, setLobby] = useState('');
-  return (
-    <div>
-      <label>
-        Lobby
+  const [newLobbyPath, setNewLobbyPath] = useState('');
+
+  const createLobby = (e: React.FormEvent) => {
+    e.preventDefault();
+    fetch('/create').then((res) => res.text()).then(path => setNewLobbyPath(path));
+  }
+
+  if (newLobbyPath) {
+    return <Redirect push to={newLobbyPath} />
+  } else {
+    return (
+      <div>
+        <label>
+          Lobby
       <input type="text" value={lobby} onChange={(e) => setLobby(e.target.value)} />
-      </label>
-      <Link to={'/lobby/' + lobby}>Enter</Link>
-    </div>
-  );
+        </label>
+        <Link to={'/lobby/' + lobby}>Enter</Link>
+        <form onSubmit={createLobby}>
+          <input type="submit" value="Create" />
+        </form>
+      </div>
+    );
+  }
 }
 
 interface LobbyParams {

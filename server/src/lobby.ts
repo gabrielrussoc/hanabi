@@ -103,7 +103,7 @@ class Lobby {
 
             // If this is the leader, we also register an start handler
             if (playerCookie.equals(this.#leader)) {
-                console.log('Registering start handler for ' + playerCookie.printable() + ' on ' + this.#id.string());
+                console.log('Identified ' + playerCookie.printable() + ' as leader on ' + this.#id.string());
                 socket.on('start', () => {
                     // TODO: return errors for invalid starts
                     if (!this.#gameStarted && this.#players.size >= MIN_PLAYERS) {

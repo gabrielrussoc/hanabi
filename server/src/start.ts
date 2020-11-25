@@ -11,8 +11,7 @@ const lobbyManager = new LobbyManager();
 app.get('/create', (req, res) => {
   const playerCookie = playerCookieFromRaw(req.headers.cookie ?? '');
   const path = lobbyManager.createLobby(playerCookie, server);
-  // Do I want to redirect with React?
-  res.redirect(path);
+  res.send(path);
 });
 
 server.listen(PORT, () => {
