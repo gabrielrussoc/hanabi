@@ -4,7 +4,7 @@ import { Cookie, playerCookieFromRaw } from "./cookie";
 import { Game } from "./game";
 import { GameInProgressError, TooManyPlayersError } from "./errors";
 import { Set as ImmutableSet } from 'immutable';
-import { ILobby, IPlayer } from 'hanabi-interface';
+import { IGame, ILobby, IPlayer } from 'hanabi-interface';
 
 const MIN_PLAYERS = 2;
 const MAX_PLAYERS = 5;
@@ -79,7 +79,9 @@ class Lobby {
 
     private publicState(): ILobby {
         return {
-            players: this.#players.valueSeq().map(p => ({ name: p.printable() })).toArray()
+            id: this.#id.string(),
+            players: this.#players.valueSeq().map(p => ({ name: p.printable() })).toArray(),
+            game: this.#game?.toPublic(),
         }
     }
 

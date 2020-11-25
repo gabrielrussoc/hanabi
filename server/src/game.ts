@@ -2,8 +2,9 @@ import { CardNotFoundError, NotEnoughHintsError, UnknownPlayerError, WrongTurnEr
 import { LobbyId } from './lobby';
 import { Cookie } from './cookie';
 import { List as ImmutableList, Map as ImmutableMap, ValueObject, hash } from 'immutable';
+import { ICard, IGame, IPlayer } from 'hanabi-interface';
 
-export enum Color {
+export enum IColor {
     RED,
     YELLOW,
     GREEN,
@@ -12,7 +13,7 @@ export enum Color {
 }
 
 export class Card implements ValueObject {
-    color: Color;
+    color: IColor;
     value: number;
 
     equals(other: Card): boolean {
@@ -26,9 +27,16 @@ export class Card implements ValueObject {
         return val | 0;
     }
 
-    constructor(color: Color, value: number) {
+    constructor(color: IColor, value: number) {
         this.color = color;
         this.value = value;
+    }
+
+    toPublic(): ICard {
+        return {
+            color: this.color,
+            value: this.value,
+        }
     }
 }
 
@@ -38,12 +46,12 @@ export class Card implements ValueObject {
 enum PlayResult {
     Successful,
     Unsuccessful,
-    ColorCompleted,
+    IColorCompleted,
 }
 
 export class Fireworks {
     // Amount of cards per color (aka highest card of each color)
-    #inner: ImmutableMap<Color, number>;
+    #inner: ImmutableMap<IColor, number>;
     #score: number;
 
     readonly #MAXIMUM_SCORE = 25;
@@ -61,7 +69,7 @@ export class Fireworks {
         if (currentValue + 1 === newValue) {
             this.#inner = this.#inner.set(color, newValue);
             this.#score += 1;
-            return newValue === 5 ? PlayResult.ColorCompleted : PlayResult.Successful;
+            return newValue === 5 ? PlayResult.IColorCompleted : PlayResult.Successful;
         }
         return PlayResult.Unsuccessful;
     }
@@ -125,6 +133,13 @@ export class Player {
     cards(): ImmutableList<Card> {
         return this.#cardsInOrder;
     }
+
+    toPublic(): IPlayer {
+        return {
+            index: this.index,
+            cardsInOrder: this.#cardsInOrder.map(c => c.toPublic()).toArray(),
+        }
+    }
 }
 
 export enum GameOver {
@@ -153,11 +168,11 @@ function generateAllCards(): Card[] {
         const copies = CARDS_PER_VALUE[value];
         for (let i = 0; i < copies; i++) {
             // I dont know how to properly iterate over enum values
-            cards.push(new Card(Color.RED, value));
-            cards.push(new Card(Color.YELLOW, value));
-            cards.push(new Card(Color.WHITE, value));
-            cards.push(new Card(Color.GREEN, value));
-            cards.push(new Card(Color.BLUE, value));
+            cards.push(new Card(IColor.RED, value));
+            cards.push(new Card(IColor.YELLOW, value));
+            cards.push(new Card(IColor.WHITE, value));
+            cards.push(new Card(IColor.GREEN, value));
+            cards.push(new Card(IColor.BLUE, value));
         }
     }
     shuffleInPlace(cards);
@@ -273,7 +288,7 @@ export class Game {
         if (result === PlayResult.Unsuccessful) {
             this.#discard.discard(card);
             this.#lives--;
-        } else if (result === PlayResult.ColorCompleted) {
+        } else if (result === PlayResult.IColorCompleted) {
             this.bumpHints();
         }
 
@@ -303,5 +318,23 @@ export class Game {
         this.#hints--;
 
         this.advanceTurn();
+    }
+
+    toPublic(): IGame {
+        return {
+            playersInOrder: this.#playersInOrder.map(p => p.toPublic()),
+            currentPlaying: this.#currentPlaying,
+            isLastRound: this.#isLastRound,
+            lastRoundRemaining: this.#lastRoundRemaining,
+
+            hints: this.#hints,
+            lives: this.#lives,
+            remainingCards: this.#remainingCards.length,
+
+            fireworks: {},
+            discard: {},
+
+            gameOver: this.gameOver() !== null,
+        }
     }
 }
