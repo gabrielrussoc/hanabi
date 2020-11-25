@@ -1,5 +1,5 @@
 **/node_modules/**
 server/bin/**
 client/build/**
-hanabi-types/build/**
+interface/build/**
 **/.eslintcache

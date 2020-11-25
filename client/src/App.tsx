@@ -1,5 +1,5 @@
 import React from 'react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useCookies } from 'react-cookie';
 import './App.css';
 import { v4 as uuid4 } from 'uuid';
@@ -11,6 +11,7 @@ import {
   useParams,
 } from "react-router-dom";
 import SocketIO from 'socket.io-client';
+import { ILobby } from 'hanabi-interface';
 
 const PLAYER_COOKIE = 'hanabi_player';
 
@@ -56,12 +57,13 @@ interface LobbyParams {
 
 function Lobby() {
   const { id } = useParams<LobbyParams>();
-  // This is creating a socket for every render. 
-  // TODO: put this somewhere else so we can avoid recreating the socket
-  const io = SocketIO({ path: '/lobby/' + id });
+  // Memoize the connection to avoid recreating.
+  // React might ignore this anytime and create new connections for each render
+  // The server must be able to deal with reconnections.
+  const io = useMemo(() => SocketIO({ path: '/lobby/' + id }), [id]);
   const [greet, setGreet] = useState('loading');
-  io.on('greet', (msg: string) => {
-    setGreet(msg);
+  io.on('state', (lobby: ILobby) => {
+    setGreet(JSON.stringify(lobby));
   });
   return <h1>{greet}</h1>;
 }

@@ -4,6 +4,7 @@ import { Cookie, playerCookieFromRaw } from "./cookie";
 import { Game } from "./game";
 import { GameInProgressError, TooManyPlayersError } from "./errors";
 import { Set as ImmutableSet } from 'immutable';
+import { ILobby, IPlayer } from 'hanabi-interface';
 
 const MIN_PLAYERS = 2;
 const MAX_PLAYERS = 5;
@@ -76,6 +77,12 @@ class Lobby {
         this.#players = this.#players.delete(player);
     }
 
+    private publicState(): ILobby {
+        return {
+            players: this.#players.valueSeq().map(p => ({ name: p.printable() })).toArray()
+        }
+    }
+
     private setMessageHandlers() {
         const io = this.#io;
 
@@ -83,12 +90,12 @@ class Lobby {
             const playerCookie = playerCookieFromRaw(socket.handshake.headers.cookie);
             console.log('user ' + playerCookie.printable() + ' connected to ' + this.#id.string());
             console.log('total players ' + this.#players.size);
-            socket.emit('greet', 'Hello from the Server :)');
             this.maybeAddPlayer(playerCookie);
+            socket.emit('state', this.publicState());
             socket.on('disconnect', () => {
+                console.log('user ' + playerCookie.printable() + ' disconnected from ' + this.#id.string());
                 this.maybeRemovePlayer(playerCookie);
             });
-            // TODO: send current state to player when player connects
         });
 
         io.on('start', (socket) => {

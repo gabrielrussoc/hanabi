@@ -6,7 +6,8 @@
     "cookie": "^0.4.1",
     "express": "^4.17.1",
     "immutable": "^4.0.0-rc.12",
-    "socket.io": "^3.0.3"
+    "socket.io": "^3.0.3",
+    "hanabi-interface": "file:../interface"
   },
   "scripts": {
     "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
