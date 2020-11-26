@@ -15,10 +15,13 @@ const PLAYER_COOKIE = 'hanabi_player';
 
 function App() {
   const [cookies, setCookie] = useCookies([PLAYER_COOKIE]);
-  if (!cookies[PLAYER_COOKIE]) {
-    setCookie(PLAYER_COOKIE, uuid4());
+  let playerCookie = cookies[PLAYER_COOKIE];
+  if (!playerCookie) {
+    const newCookie = uuid4();
+    setCookie(PLAYER_COOKIE, newCookie);
+    playerCookie = newCookie; 
   }
-  const cookieHash = md5(cookies[PLAYER_COOKIE]);
+  const cookieHash = md5(playerCookie);
   
   return (
     <Router>
