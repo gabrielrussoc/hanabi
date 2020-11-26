@@ -1,6 +1,7 @@
 import cookie from 'cookie';
 import { PlayerCookieNotFoundError } from './errors';
 import { hash, ValueObject } from 'immutable';
+import md5 from 'md5';
 
 const PLAYER_COOKIE = 'hanabi_player';
 
@@ -21,6 +22,10 @@ export class Cookie implements ValueObject {
 
     printable(): string {
         return this.#value.slice(-5);
+    }
+
+    md5(): string {
+        return md5(this.#value);
     }
 }
 

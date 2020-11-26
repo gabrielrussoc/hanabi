@@ -24,15 +24,16 @@ function CardList(props: CardListProps) {
 
 interface GameProps {
   game: IGame,
+  playerIndex: number,
 }
 
 function Game(props: GameProps) {
-  const { game } = props;
+  const { game, playerIndex } = props;
   return (
     <div>
       <h1>In game</h1>
       <ul>
-        {game.playersInOrder.map(p => <li>{p.index}: <CardList cards={p.cardsInOrder} /></li>)}
+  {game.playersInOrder.map(p => <li>{p.index}: {p.index === playerIndex && <CardList cards={p.cardsInOrder} />}</li>)}
       </ul>
     </div>
   );

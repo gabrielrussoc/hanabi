@@ -3,11 +3,13 @@
   "version": "0.0.1",
   "description": "Homemade non-commercial implementation of Hanabi",
   "dependencies": {
+    "@types/md5": "^2.2.1",
     "cookie": "^0.4.1",
     "express": "^4.17.1",
+    "hanabi-interface": "file:../interface",
     "immutable": "^4.0.0-rc.12",
-    "socket.io": "^3.0.3",
-    "hanabi-interface": "file:../interface"
+    "md5": "^2.3.0",
+    "socket.io": "^3.0.3"
   },
   "scripts": {
     "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",

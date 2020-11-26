@@ -17,6 +17,7 @@ export interface ILobbyPlayer {
 
 export interface IPlayer {
     index: number,
+    cookieHash: string,
     cardsInOrder: ICard[],
 }
 

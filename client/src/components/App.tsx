@@ -9,6 +9,7 @@ import {
 import NotFound from './NotFound';
 import Home from './Home';
 import LobbyWrapper from './Lobby';
+import md5 from 'md5';
 
 const PLAYER_COOKIE = 'hanabi_player';
 
@@ -17,7 +18,8 @@ function App() {
   if (!cookies[PLAYER_COOKIE]) {
     setCookie(PLAYER_COOKIE, uuid4());
   }
-
+  const cookieHash = md5(cookies[PLAYER_COOKIE]);
+  
   return (
     <Router>
       <Switch>
@@ -25,7 +27,7 @@ function App() {
           <Home />
         </Route>
         <Route path="/lobby/:id">
-          <LobbyWrapper />
+          <LobbyWrapper cookieHash={cookieHash} />
         </Route>
         <Route path="*">
           <NotFound />

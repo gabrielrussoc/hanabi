@@ -138,6 +138,7 @@ export class Player {
         return {
             index: this.index,
             cardsInOrder: this.#cardsInOrder.map(c => c.toPublic()).toArray(),
+            cookieHash: this.cookie.md5(),
         }
     }
 }
@@ -273,8 +274,8 @@ export class Game {
     }
 
     playerFrom(cookie: Cookie): Player {
-        const player = this.#playersInOrder.find((player: Player): boolean => {
-            return player.cookie.equals(cookie);
+        const player = this.#playersInOrder.find((p: Player): boolean => {
+            return p.cookie.equals(cookie);
         });
         if (player) {
             return player;
