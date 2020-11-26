@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useState } from 'react';
 import { useCookies } from 'react-cookie';
-import './App.css';
 import { v4 as uuid4 } from 'uuid';
 import {
   BrowserRouter as Router,
