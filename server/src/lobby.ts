@@ -1,10 +1,10 @@
 import { Server as SocketServer, Socket } from "socket.io";
 import { Server as HttpServer } from "http";
 import { Cookie, playerCookieFromRaw } from "./cookie";
-import { Game } from "./game";
+import { Card, Game } from "./game";
 import { GameInProgressError, TooManyPlayersError } from "./errors";
 import { Set as ImmutableSet } from 'immutable';
-import { IGame, ILobby, IPlayer } from 'hanabi-interface';
+import { ICard, IGame, ILobby, IPlayer } from 'hanabi-interface';
 
 const MIN_PLAYERS = 2;
 const MAX_PLAYERS = 5;
@@ -114,6 +114,34 @@ class Lobby {
                     }
                 })
             }
+
+            // TODO: What if this throws? I believe socket.io doesn't handle it:
+            // https://socket.io/docs/v3/listening-to-events/#Error-handling
+            // TODO: make this less repetitive.
+            socket.on('play', (card: ICard) => {
+                const game = this.#game;
+                if (game) {
+                    const player = game.playerFrom(playerCookie);
+                    game.play(player, new Card(card.color, card.value));
+                    io.emit('state', this.publicState());
+                }
+            });
+            socket.on('discard', (card: ICard) => {
+                const game = this.#game;
+                if (game) {
+                    const player = game.playerFrom(playerCookie);
+                    game.discard(player, new Card(card.color, card.value));
+                    io.emit('state', this.publicState());
+                }
+            });
+            socket.on('hint', () => {
+                const game = this.#game;
+                if (game) {
+                    const player = game.playerFrom(playerCookie);
+                    game.hint(player);
+                    io.emit('state', this.publicState());
+                }
+            });
         });
     }
 

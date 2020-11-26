@@ -272,10 +272,14 @@ export class Game {
         }
     }
 
-    playerFrom(cookie: Cookie): Player | undefined {
-        return this.#playersInOrder.find((player: Player): boolean => {
+    playerFrom(cookie: Cookie): Player {
+        const player = this.#playersInOrder.find((player: Player): boolean => {
             return player.cookie.equals(cookie);
         });
+        if (player) {
+            return player;
+        }
+        throw new UnknownPlayerError('Player ' + cookie.printable() + ' is unknown to ' + this.id.string());
     }
 
     // Plays a card. Throws if invalid.
