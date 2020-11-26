@@ -1,5 +1,5 @@
-import React from 'react';
-import { useState, useMemo } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useCookies } from 'react-cookie';
 import './App.css';
 import { v4 as uuid4 } from 'uuid';
@@ -12,7 +12,7 @@ import {
   Redirect,
 } from "react-router-dom";
 import SocketIO from 'socket.io-client';
-import { ILobby } from 'hanabi-interface';
+import { ILobby, IGame } from 'hanabi-interface';
 
 const PLAYER_COOKIE = 'hanabi_player';
 
@@ -29,7 +29,7 @@ function App() {
           <Home />
         </Route>
         <Route path="/lobby/:id">
-          <Lobby />
+          <LobbyWrapper />
         </Route>
         <Route path="*">
           <NotFound />
@@ -39,16 +39,13 @@ function App() {
   );
 }
 
-function createLobby() {
-
-}
-
 function Home() {
   const [lobby, setLobby] = useState('');
   const [newLobbyPath, setNewLobbyPath] = useState('');
 
   const createLobby = (e: React.FormEvent) => {
     e.preventDefault();
+    // TODO: deal with failures
     fetch('/create').then((res) => res.text()).then(path => setNewLobbyPath(path));
   }
 
@@ -70,36 +67,92 @@ function Home() {
   }
 }
 
-interface LobbyParams {
+interface LobbyWrapperParams {
   id: string
 }
 
-function Lobby() {
-  const { id } = useParams<LobbyParams>();
-  // Memoize the connection to avoid recreating.
-  // React might ignore this anytime and create new connections for each render
-  // The server must be able to deal with reconnections.
-  const io = useMemo(() => SocketIO({ path: '/lobby/' + id }), [id]);
+// This component holds the socket we are going to use to 
+// talk to the server and pass down the tree.
+function LobbyWrapper() {
+  const { id } = useParams<LobbyWrapperParams>();
+  const socketRef = useRef<SocketIOClient.Socket | undefined>();
+  const [socket, setSocket] = useState<SocketIOClient.Socket | undefined>();
+
+  useEffect(() => {
+    socketRef.current = SocketIO({ path: '/lobby/' + id });
+    setSocket(socketRef.current);
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    }
+  }, [id]);
+
+  if (socket) {
+    return <Lobby id={id} socket={socket} />
+  } else {
+    return <h1>Establishing connection to the server...</h1>;
+  }
+}
+
+interface LobbyProps {
+  id: string,
+  socket: SocketIOClient.Socket,
+}
+
+function Lobby(props: LobbyProps) {
+  const { id, socket } = props;
   const emptyLobby: ILobby = {
     // TODO: timeout here for lobby not found
     id: "Looking for lobby...",
     players: [],
   }
   const [lobby, setLobby] = useState(emptyLobby);
-  io.on('state', (lobby: ILobby) => {
+  socket.on('state', (lobby: ILobby) => {
     setLobby(lobby);
   });
+
+  if (lobby.game) {
+    return <InGame game={lobby.game} />;
+  } else {
+    return <WaitingRoom lobby={lobby} startFn={() => socket.emit('start')} />;
+  }
+}
+
+interface WaitingRoomProps {
+  lobby: ILobby,
+  startFn: () => void,
+}
+
+function WaitingRoom(props: WaitingRoomProps) {
   // TODO: hide start button for non leader
   // TODO: Give feedback when game can't be started (i.e. not enough players)
   const isLeader = true;
+  const { lobby, startFn } = props;
   return (
     <div>
       <h1>{lobby.id}</h1>
       <ul>
         {lobby.players.map(p => <li>{p.name}</li>)}
       </ul>
-      {isLeader && <button onClick={() => io.emit('start')}>Start</button>}
-      {lobby.game !== undefined ? "STARTED" : "PENDING"}
+      {isLeader && <button onClick={startFn}>Start</button>}
+    </div>
+  );
+}
+
+interface InGameProps {
+  game: IGame,
+}
+
+function InGame(props: InGameProps) {
+  const { game } = props;
+  return (
+    <div>
+      <h1>In game</h1>
+      <ul>
+        {game.playersInOrder.map(p => <li>{p.index}</li>)}
+      </ul>
     </div>
   );
 }
