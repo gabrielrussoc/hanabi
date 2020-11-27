@@ -43,6 +43,7 @@ export interface IGame {
     lastRoundRemaining: number;
     
     hints: number;
+    maxHints: number;
     lives: number;
     remainingCards: number;
     

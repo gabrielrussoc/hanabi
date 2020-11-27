@@ -1,4 +1,4 @@
-import { CardNotFoundError, NotEnoughHintsError, UnknownPlayerError, WrongTurnError } from './errors';
+import { CardNotFoundError, NotEnoughHintsError, TooManyHintsToDiscardError, UnknownPlayerError, WrongTurnError } from './errors';
 import { LobbyId } from './lobby';
 import { Cookie } from './cookie';
 import { List as ImmutableList, Map as ImmutableMap, ValueObject, hash } from 'immutable';
@@ -319,6 +319,10 @@ export class Game {
     discard(player: Player, card: Card) {
         this.validateTurn(player);
 
+        if (this.#hints === this.#MAX_HINTS) {
+            throw new TooManyHintsToDiscardError("You can't discard when all hints available");
+        }
+
         // First try to remove a card from the player hand since it can throw.
         this.removeAndDraw(player, card);
         this.#discard.discard(card);
@@ -348,6 +352,7 @@ export class Game {
             lastRoundRemaining: this.#lastRoundRemaining,
 
             hints: this.#hints,
+            maxHints: this.#MAX_HINTS,
             lives: this.#lives,
             remainingCards: this.#remainingCards.length,
 

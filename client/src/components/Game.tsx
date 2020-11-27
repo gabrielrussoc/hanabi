@@ -19,10 +19,11 @@ interface CardListProps {
   myTurn: boolean,
   playFn: (c: ICard) => void;
   discardFn: (c: ICard) => void;
+  canDiscard: boolean,
 }
 
 function CardList(props: CardListProps) {
-  const { cards, myCards, myTurn, playFn, discardFn } = props;
+  const { cards, myCards, myTurn, playFn, discardFn, canDiscard } = props;
   return (
     <>
       {cards.map(c => {
@@ -30,7 +31,7 @@ function CardList(props: CardListProps) {
           <>
             <Card card={c} hidden={myCards} />
             {myCards && <button onClick={() => playFn(c)} disabled={!myTurn}>Play</button>}
-            {myCards && <button onClick={() => discardFn(c)} disabled={!myTurn}>Discard</button>}
+            {myCards && <button onClick={() => discardFn(c)} disabled={!myTurn || !canDiscard}>Discard</button>}
           </>
         );
       })}
@@ -51,7 +52,7 @@ function Discard(props: DiscardProps) {
     }
   });
   // TODO: Use a proper component here instead of CardList
-  return <CardList cards={cards} myTurn={false} myCards={false} playFn={() => {}} discardFn={() => {}}/>;
+  return <CardList cards={cards} myTurn={false} myCards={false} playFn={() => {}} discardFn={() => {}} canDiscard={false}/>;
 }
 
 interface FireworkProps {
@@ -104,6 +105,7 @@ function Game(props: GameProps) {
               myCards={myCards}
               playFn={playFn}
               discardFn={discardFn}
+              canDiscard={game.hints < game.maxHints}
             />
           </li>;
         })}

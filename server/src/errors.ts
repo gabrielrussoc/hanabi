@@ -40,3 +40,9 @@ export class GameInProgressError extends Error {
     }
 }
 
+export class TooManyHintsToDiscardError extends Error {
+    constructor(m: string) {
+        super(m);
+    }
+}
+
