@@ -2,7 +2,7 @@ import { CardNotFoundError, NotEnoughHintsError, UnknownPlayerError, WrongTurnEr
 import { LobbyId } from './lobby';
 import { Cookie } from './cookie';
 import { List as ImmutableList, Map as ImmutableMap, ValueObject, hash } from 'immutable';
-import { ICard, IGame, IPlayer } from 'hanabi-interface';
+import { ICard, IDiscard, IFireworks, IGame, IPlayer } from 'hanabi-interface';
 
 export enum IColor {
     RED,
@@ -81,6 +81,14 @@ export class Fireworks {
     win(): boolean {
         return this.score() === this.#MAXIMUM_SCORE;
     }
+
+    toPublic(): IFireworks {
+        return {
+            // TODO: guarantee that every color is present and ordering is consistent
+            inner: this.#inner.toArray(),
+            score: this.#score,
+        }
+    }
 }
 
 export class Discard {
@@ -98,6 +106,13 @@ export class Discard {
 
     status(): ReadonlyMap<Card, number> {
         return this.#inner;
+    }
+
+    toPublic(): IDiscard {
+        // TODO: guarantee ordering is consistent
+        return {
+            inner: this.#inner.toArray(),
+        }
     }
 }
 
@@ -336,8 +351,8 @@ export class Game {
             lives: this.#lives,
             remainingCards: this.#remainingCards.length,
 
-            fireworks: {},
-            discard: {},
+            fireworks: this.#fireworks.toPublic(),
+            discard: this.#discard.toPublic(),
 
             gameOver: this.gameOver() !== null,
         }

@@ -22,11 +22,18 @@ export interface IPlayer {
 }
 
 export interface IFireworks {
-    // TODO
+    // Number of cards per color
+    // The server guarantees a consistent order
+    // and all colors to be presente exactly once
+    inner: [IColor, number][],
+    score: number,
 }
 
 export interface IDiscard {
-    // TODO
+    // Number of cards discarded
+    // The server guarantees a consistent order
+    // and all cards to be present at most once
+    inner: [ICard, number][],
 }
 
 export interface IGame {

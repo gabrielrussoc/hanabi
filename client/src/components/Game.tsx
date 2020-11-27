@@ -38,6 +38,38 @@ function CardList(props: CardListProps) {
   );
 }
 
+interface DiscardProps {
+  cardsWithCount: [ICard, number][]
+}
+
+function Discard(props: DiscardProps) {
+  const { cardsWithCount } = props;
+  let cards: ICard[] = [];
+  cardsWithCount.forEach(([card, count]) => {
+    for (let i = 0; i < count; i++) {
+      cards.push(card);
+    }
+  });
+  // TODO: Use a proper component here instead of CardList
+  return <CardList cards={cards} myTurn={false} myCards={false} playFn={() => {}} discardFn={() => {}}/>;
+}
+
+interface FireworkProps {
+  colorsWithCount: [IColor, number][]
+}
+
+function Fireworks(props: FireworkProps) {
+  const { colorsWithCount } = props;
+  // TODO: return a proper component here
+  return (
+    <>
+      {colorsWithCount.map(([color, count]) => 
+        <div style={{ color: IColor[color], display: "inline" }}>{count}■</div>)
+      }
+    </>
+  );
+}
+
 interface GameProps {
   game: IGame,
   playerIndex: number,
@@ -59,6 +91,8 @@ function Game(props: GameProps) {
       <h2>Hints: {game.hints}</h2>
       <button onClick={hintFn} disabled={!myTurn}>Give hint</button>
       <h2>Lives: {game.lives}</h2>
+      <h2>Fireworks: <Fireworks colorsWithCount={game.fireworks.inner} /></h2>
+      <h2>Discard: <Discard cardsWithCount={game.discard.inner}/></h2>
       <ul>
         {game.playersInOrder.map(p => {
           const myCards = p.index === playerIndex;
