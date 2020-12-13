@@ -62,7 +62,7 @@ class Lobby {
             return;
         }
         if (this.#gameStarted) {
-            throw new GameInProgressError("This game has already started");
+            throw new GameInProgressError("Player " + player.printable() + " is unknown to " + this.#id);
         }
         if (this.#players.size === MAX_PLAYERS) {
             throw new TooManyPlayersError("Lobby is full");
