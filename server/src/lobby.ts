@@ -4,7 +4,7 @@ import { Cookie, playerCookieFromRaw } from "./cookie";
 import { Card, Game, Player } from "./game";
 import { GameInProgressError, TooManyPlayersError } from "./errors";
 import { Set as ImmutableSet } from 'immutable';
-import { ICard, IGame, ILobby, IPlayer } from 'hanabi-interface';
+import { ICard, ILobby } from 'hanabi-interface';
 
 const MIN_PLAYERS = 2;
 const MAX_PLAYERS = 5;
@@ -64,7 +64,7 @@ class Lobby {
             return;
         }
         if (this.#gameStarted) {
-            throw new GameInProgressError("Player " + player.printable() + " is unknown to " + this.#id);
+            throw new GameInProgressError("Player " + player.printable() + " is unknown to " + this.#id.string());
         }
         if (this.#players.size === MAX_PLAYERS) {
             throw new TooManyPlayersError("Lobby is full");

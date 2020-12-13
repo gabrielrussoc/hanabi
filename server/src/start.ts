@@ -3,6 +3,11 @@ import http from "http";
 import { Cookie, playerCookieFromRaw } from "./cookie";
 import { LobbyManager } from "./lobby";
 
+// To make sure we don't crash the server on exceptions
+process.on('uncaughtException', (err) => {
+  console.log('UNCAUGHT EXCEPTION - keeping process alive:', err);
+});
+
 const PORT = process.env.PORT || 5000;
 const app = express();
 const server = http.createServer(app);
