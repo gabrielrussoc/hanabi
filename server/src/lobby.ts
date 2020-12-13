@@ -1,7 +1,7 @@
 import { Server as SocketServer, Socket } from "socket.io";
 import { Server as HttpServer } from "http";
 import { Cookie, playerCookieFromRaw } from "./cookie";
-import { Card, Game } from "./game";
+import { Card, Game, Player } from "./game";
 import { GameInProgressError, TooManyPlayersError } from "./errors";
 import { Set as ImmutableSet } from 'immutable';
 import { ICard, IGame, ILobby, IPlayer } from 'hanabi-interface';
@@ -12,7 +12,11 @@ const MAX_PLAYERS = 5;
 export class LobbyId {
     #value: string;
 
-    constructor() {
+    constructor(valueOverride?: string) {
+        if (valueOverride) {
+            this.#value = valueOverride;
+            return;
+        }
         // well, it works
         this.#value = '';
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -145,7 +149,10 @@ class Lobby {
         });
     }
 
-    constructor(leader: Cookie, server: HttpServer) {
+    constructor(leader: Cookie, server: HttpServer, idOverride?: string) {
+        if (idOverride) {
+            this.#id = new LobbyId(idOverride);
+        }
         const path = '/lobby/' + this.#id.string();
         this.#path = path;
         this.#leader = leader;
@@ -159,6 +166,14 @@ class Lobby {
     path(): string {
         return this.#path;
     }
+
+    fakeStart(players: Cookie[]) {
+        players.forEach(p => this.maybeAddPlayer(p));
+        this.#gameStarted = true;
+        this.#game = new Game(this.#id, [...this.#players]);
+        this.#io.emit('state', this.publicState());
+
+    }
 }
 
 export class LobbyManager {
@@ -169,6 +184,21 @@ export class LobbyManager {
         const lobby = new Lobby(leader, server);
         this.#lobbies.push(lobby);
         return lobby.path();
+    }
+
+    // Helper to create some prepopulated lobbies
+    // Available lobbies are
+    // /lobby/testN
+    // where N is the number of players (between 2 and 5, inclusive)
+    // The players have the cookies devN
+    createTestLobbies(leader: Cookie, server: HttpServer) {
+        const players = [new Cookie("dev1")];
+        for (let n = 2; n <= 5; n++) {
+            const lobby = new Lobby(leader, server, `test${n}`);
+            this.#lobbies.push(lobby);
+            players.push(new Cookie(`dev${n}`));
+            lobby.fakeStart(players);
+        }
     }
 
     // TODO: get rid of old lobbies

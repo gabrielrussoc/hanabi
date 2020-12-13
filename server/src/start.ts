@@ -1,6 +1,6 @@
 import express from "express";
 import http from "http";
-import { playerCookieFromRaw } from "./cookie";
+import { Cookie, playerCookieFromRaw } from "./cookie";
 import { LobbyManager } from "./lobby";
 
 const PORT = process.env.PORT || 5000;
@@ -17,3 +17,8 @@ app.get('/create', (req, res) => {
 server.listen(PORT, () => {
   console.log('listening on *:' + PORT);
 });
+
+const env = process.env.NODE_ENV || 'development';
+if (env === 'development') {
+  lobbyManager.createTestLobbies(new Cookie("dev1"), server);
+}
