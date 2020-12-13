@@ -66,7 +66,7 @@ function Lobby(props: LobbyProps) {
   if (game) {
     const playerIndex = game.playersInOrder.findIndex((p) => p.cookieHash == cookieHash);
     // TODO: return something other than NotFound here. 
-    return playerIndex !== -1 ? <Game game={game} playerIndex={playerIndex} socket={socket} /> : <NotFound />;
+    return playerIndex !== -1 ? <Game id={id} game={game} playerIndex={playerIndex} socket={socket} /> : <NotFound />;
   } else {
     return <WaitingRoom lobby={lobby} startFn={() => socket.emit('start')} />;
   }

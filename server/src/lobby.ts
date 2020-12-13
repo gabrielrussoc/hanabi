@@ -9,6 +9,8 @@ import { ICard, IGame, ILobby, IPlayer } from 'hanabi-interface';
 const MIN_PLAYERS = 2;
 const MAX_PLAYERS = 5;
 
+const env = process.env.NODE_ENV || 'development';
+
 export class LobbyId {
     #value: string;
 
@@ -119,13 +121,18 @@ class Lobby {
                 })
             }
 
+            // If this is a dev lobby, assume the correct player is playing
+            // This allows us play with all players using a single client
+            const assumeCorrectPlayer = env === "development" && this.#path.includes("test");
+
             // TODO: What if this throws? I believe socket.io doesn't handle it:
             // https://socket.io/docs/v3/listening-to-events/#Error-handling
             // TODO: make this less repetitive.
             socket.on('play', (card: ICard) => {
                 const game = this.#game;
                 if (game) {
-                    const player = game.playerFrom(playerCookie);
+                    const cookie = assumeCorrectPlayer ? game.currentPlayerCookie() : playerCookie;
+                    const player = game.playerFrom(cookie);
                     game.play(player, new Card(card.color, card.value));
                     io.emit('state', this.publicState());
                 }
@@ -133,7 +140,8 @@ class Lobby {
             socket.on('discard', (card: ICard) => {
                 const game = this.#game;
                 if (game) {
-                    const player = game.playerFrom(playerCookie);
+                    const cookie = assumeCorrectPlayer ? game.currentPlayerCookie() : playerCookie;
+                    const player = game.playerFrom(cookie);
                     game.discard(player, new Card(card.color, card.value));
                     io.emit('state', this.publicState());
                 }
@@ -141,7 +149,8 @@ class Lobby {
             socket.on('hint', () => {
                 const game = this.#game;
                 if (game) {
-                    const player = game.playerFrom(playerCookie);
+                    const cookie = assumeCorrectPlayer ? game.currentPlayerCookie() : playerCookie;
+                    const player = game.playerFrom(cookie);
                     game.hint(player);
                     io.emit('state', this.publicState());
                 }

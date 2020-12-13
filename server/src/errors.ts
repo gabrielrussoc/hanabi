@@ -46,3 +46,9 @@ export class TooManyHintsToDiscardError extends Error {
     }
 }
 
+export class DevOnlyError extends Error {
+    constructor(m: string) {
+        super(m);
+    }
+}
+

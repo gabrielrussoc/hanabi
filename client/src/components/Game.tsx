@@ -1,6 +1,8 @@
 import { ICard, IColor, IGame, IPlayer } from "hanabi-interface";
 import { Container, Row, Col } from 'react-grid-system';
 
+const env = process.env.NODE_ENV || 'development';
+
 interface CardProps {
   card: ICard,
   hidden: boolean,
@@ -14,26 +16,39 @@ function Card(props: CardProps) {
   return <div style={{ color: IColor[card.color], display: "inline" }}>{card.value}■</div>;
 }
 
-interface CardListProps {
+interface PlayableCardListProps {
   cards: ICard[],
-  myCards: boolean,
-  myTurn: boolean,
+  showCards: boolean,
+  currentPlaying: boolean,
   playFn: (c: ICard) => void;
   discardFn: (c: ICard) => void;
   canDiscard: boolean,
 }
 
-function CardList(props: CardListProps) {
-  const { cards, myCards, myTurn, playFn, discardFn, canDiscard } = props;
+function PlayableCardList(props: PlayableCardListProps) {
+  const { cards, showCards, currentPlaying, playFn, discardFn, canDiscard } = props;
   return (
     <>
       {cards.map(c => {
         return (
           <>
-            <Card card={c} hidden={myCards} />
-            {myCards && <button onClick={() => playFn(c)} disabled={!myTurn}>Play</button>}
-            {myCards && <button onClick={() => discardFn(c)} disabled={!myTurn || !canDiscard}>Discard</button>}
+            <Card card={c} hidden={!showCards} />
+            {<button onClick={() => playFn(c)} disabled={!currentPlaying}>Play</button>}
+            {<button onClick={() => discardFn(c)} disabled={!currentPlaying || !canDiscard}>Discard</button>}
           </>
+        );
+      })}
+    </>
+  );
+}
+
+function SimpleCardList(props: { cards: ICard[] }) {
+  const { cards } = props;
+  return (
+    <>
+      {cards.map(c => {
+        return (
+          <Card card={c} hidden={false} />
         );
       })}
     </>
@@ -49,7 +64,7 @@ function Discard(props: { cardsWithCount: [ICard, number][] }) {
     }
   });
   // TODO: Use a proper component here instead of CardList
-  return <CardList cards={cards} myTurn={false} myCards={false} playFn={() => { }} discardFn={() => { }} canDiscard={false} />;
+  return <SimpleCardList cards={cards} />;
 }
 
 function Fireworks(props: { colorsWithCount: [IColor, number][] }) {
@@ -82,17 +97,9 @@ function Tokens(props: { lives: number, hints: number }) {
 function OtherPlayer(props: { player: IPlayer, currentPlayerIndex: number }) {
   const { player, currentPlayerIndex } = props;
   const currentPlaying = currentPlayerIndex === player.index;
-  // TODO: Make CardList more generic so we don't have to supply
-  // things like playFn to other players
   return <>
     <h1>Player {player.index} {currentPlaying ? "*" : ""}</h1>
-    <CardList
-      cards={player.cardsInOrder}
-      myTurn={false}
-      myCards={false}
-      playFn={(c: ICard) => {}}
-      discardFn={(c: ICard) => {}}
-      canDiscard={false} />
+    <SimpleCardList cards={player.cardsInOrder} />
   </>;
 }
 
@@ -110,11 +117,11 @@ function MainPlayer(props: MainPlayerProps) {
   return <>
     <h1>Player {player.index}</h1>
     <button onClick={hintFn} disabled={!currentPlaying}>Give hint</button>
-    <br/>
-    <CardList
+    <br />
+    <PlayableCardList
       cards={player.cardsInOrder}
-      myTurn={currentPlaying}
-      myCards={true}
+      currentPlaying={currentPlaying}
+      showCards={env === "development"}
       playFn={playFn}
       discardFn={discardFn}
       canDiscard={canDiscard} />
@@ -150,13 +157,14 @@ function computeOtherPlayersMap(playersInOrder: IPlayer[], mainPlayerIndex: numb
 }
 
 interface GameProps {
+  id: string,
   game: IGame,
   playerIndex: number,
   socket: SocketIOClient.Socket,
 }
 
 function Game(props: GameProps) {
-  const { game, playerIndex, socket } = props;
+  const { id, game, playerIndex, socket } = props;
 
   const playFn = (card: ICard) => socket.emit('play', card);
   const discardFn = (card: ICard) => socket.emit('discard', card);
@@ -168,15 +176,27 @@ function Game(props: GameProps) {
   const playerPos4 = otherPlayersMap.get(4);
   const playerPos6 = otherPlayersMap.get(6);
 
-  const mainPlayer =
-    <MainPlayer
-      player={game.playersInOrder[playerIndex]}
+
+  const mainPlayerComponent = (player: IPlayer) => {
+    return <MainPlayer
+      player={player}
       playFn={playFn}
       discardFn={discardFn}
       hintFn={hintFn}
-      currentPlaying={game.currentPlaying === playerIndex}
+      currentPlaying={game.currentPlaying === player.index}
       canDiscard={game.hints < game.maxHints}
     />;
+  }
+
+  const otherPlayerComponent = (player: IPlayer) => {
+    if (env === "development" && id.includes("test")) {
+      return mainPlayerComponent(player);
+    } else {
+      return <OtherPlayer player={player} currentPlayerIndex={game.currentPlaying} />;
+    }
+  }
+  
+  const mainPlayer = mainPlayerComponent(game.playersInOrder[playerIndex]);
 
   return (
     // The game is drawn on 3x3 grid
@@ -191,13 +211,13 @@ function Game(props: GameProps) {
     <Container style={{ height: "100vh" }}>
       <Row debug style={{ height: "25%" }}>
         <Col debug><Deck cardsRemaining={game.remainingCards} /></Col>
-        <Col debug>{playerPos2 && <OtherPlayer player={playerPos2} currentPlayerIndex={game.currentPlaying} />}</Col>
-        <Col debug>{playerPos3 && <OtherPlayer player={playerPos3} currentPlayerIndex={game.currentPlaying} />}</Col>
+        <Col debug>{playerPos2 && otherPlayerComponent(playerPos2) }</Col>
+        <Col debug>{playerPos3 && otherPlayerComponent(playerPos3) }</Col>
       </Row>
       <Row debug style={{ height: "50%" }}>
-        <Col debug>{playerPos4 && <OtherPlayer player={playerPos4} currentPlayerIndex={game.currentPlaying} />}</Col>
+        <Col debug>{playerPos4 && otherPlayerComponent(playerPos4) }</Col>
         <Col debug><Fireworks colorsWithCount={game.fireworks.inner} /></Col>
-        <Col debug>{playerPos6 && <OtherPlayer player={playerPos6} currentPlayerIndex={game.currentPlaying} />}</Col>
+        <Col debug>{playerPos6 && otherPlayerComponent(playerPos6) }</Col>
       </Row>
       <Row debug style={{ height: "25%" }}>
         <Col debug><Discard cardsWithCount={game.discard.inner} /></Col>

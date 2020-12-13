@@ -1,8 +1,17 @@
-import { CardNotFoundError, NotEnoughHintsError, TooManyHintsToDiscardError, UnknownPlayerError, WrongTurnError } from './errors';
+import {
+    CardNotFoundError,
+    DevOnlyError,
+    NotEnoughHintsError,
+    TooManyHintsToDiscardError,
+    UnknownPlayerError,
+    WrongTurnError
+} from './errors';
 import { LobbyId } from './lobby';
 import { Cookie } from './cookie';
 import { List as ImmutableList, Map as ImmutableMap, ValueObject, hash } from 'immutable';
 import { ICard, IDiscard, IFireworks, IGame, IPlayer } from 'hanabi-interface';
+
+const env = process.env.NODE_ENV || 'development';
 
 export enum IColor {
     RED,
@@ -342,6 +351,13 @@ export class Game {
         this.#hints--;
 
         this.advanceTurn();
+    }
+
+    currentPlayerCookie(): Cookie {
+        if (env === "development") {
+            return this.#playersInOrder[this.#currentPlaying].cookie;
+        }
+        throw new DevOnlyError("Can't access player cookies outside of dev environment");
     }
 
     toPublic(): IGame {
