@@ -79,12 +79,13 @@ function Tokens(props: { lives: number, hints: number }) {
   );
 }
 
-function OtherPlayer(props: { player: IPlayer }) {
-  const { player } = props;
+function OtherPlayer(props: { player: IPlayer, currentPlayerIndex: number }) {
+  const { player, currentPlayerIndex } = props;
+  const currentPlaying = currentPlayerIndex === player.index;
   // TODO: Make CardList more generic so we don't have to supply
   // things like playFn to other players
   return <>
-    <h1>Player {player.index}</h1>
+    <h1>Player {player.index} {currentPlaying ? "*" : ""}</h1>
     <CardList
       cards={player.cardsInOrder}
       myTurn={false}
@@ -108,6 +109,8 @@ function MainPlayer(props: MainPlayerProps) {
   const { player, playFn, discardFn, hintFn, canDiscard, currentPlaying } = props;
   return <>
     <h1>Player {player.index}</h1>
+    <button onClick={hintFn} disabled={!currentPlaying}>Give hint</button>
+    <br/>
     <CardList
       cards={player.cardsInOrder}
       myTurn={currentPlaying}
@@ -188,13 +191,13 @@ function Game(props: GameProps) {
     <Container style={{ height: "100vh" }}>
       <Row debug style={{ height: "25%" }}>
         <Col debug><Deck cardsRemaining={game.remainingCards} /></Col>
-        <Col debug>{playerPos2 && <OtherPlayer player={playerPos2} />}</Col>
-        <Col debug>{playerPos3 && <OtherPlayer player={playerPos3} />}</Col>
+        <Col debug>{playerPos2 && <OtherPlayer player={playerPos2} currentPlayerIndex={game.currentPlaying} />}</Col>
+        <Col debug>{playerPos3 && <OtherPlayer player={playerPos3} currentPlayerIndex={game.currentPlaying} />}</Col>
       </Row>
       <Row debug style={{ height: "50%" }}>
-        <Col debug>{playerPos4 && <OtherPlayer player={playerPos4} />}</Col>
+        <Col debug>{playerPos4 && <OtherPlayer player={playerPos4} currentPlayerIndex={game.currentPlaying} />}</Col>
         <Col debug><Fireworks colorsWithCount={game.fireworks.inner} /></Col>
-        <Col debug>{playerPos6 && <OtherPlayer player={playerPos6} />}</Col>
+        <Col debug>{playerPos6 && <OtherPlayer player={playerPos6} currentPlayerIndex={game.currentPlaying} />}</Col>
       </Row>
       <Row debug style={{ height: "25%" }}>
         <Col debug><Discard cardsWithCount={game.discard.inner} /></Col>
