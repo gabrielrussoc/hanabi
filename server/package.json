@@ -4,6 +4,7 @@
   "description": "Homemade non-commercial implementation of Hanabi",
   "dependencies": {
     "@types/md5": "^2.2.1",
+    "@types/socket.io": "^2.1.12",
     "cookie": "^0.4.1",
     "express": "^4.17.1",
     "hanabi-interface": "file:../interface",
