@@ -9,6 +9,7 @@ import { useParams } from "react-router-dom";
 import SocketIO from 'socket.io-client';
 import Game from './Game';
 import NotFound from "./NotFound";
+import { CopyToClipboard } from 'react-copy-to-clipboard';
 
 interface LobbyWrapperParams {
   id: string
@@ -99,9 +100,15 @@ function WaitingRoom(props: WaitingRoomProps) {
   // TODO: Give feedback when game can't be started (i.e. not enough players)
   const isLeader = true;
   const { lobby, startFn } = props;
+  const [copied, setCopied] = useState(false);
   return (
     <div>
-      <h1>{lobby.id}</h1>
+      <h1> Room Code: {lobby.id}  </h1>
+      <CopyToClipboard text={window.location.toString()}
+        onCopy={() => setCopied(true)}>
+        <button>Copy to clipboard</button>
+      </CopyToClipboard>
+      {copied ? <span style={{ color: 'red' }}>Copied.</span> : null}
       <ul>
         {lobby.players.map(p => <li>{p.name}</li>)}
       </ul>
