@@ -17,6 +17,7 @@
     "build": "tsc",
     "prestart": "npm run build",
     "start": "node bin/start.js",
+    "start:prod": "node bin/start.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
