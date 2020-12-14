@@ -13,25 +13,21 @@ To build and run this from scratch:
 
 ## Using docker
 
-We have docker images for both the client and server. They are `Dockerfile.server` and `Dockerfile.client`.
-The reason they live in the root of the repo (and not inside `server/` and `client/`) is because they both 
-depend on the interface module. In other words,
-they have a local npm dependency and [this is why this is unusual for Docker](https://stackoverflow.com/questions/44654215/setting-up-docker-nodejs-application-with-local-npm-dependencies).
+We have docker a docker image for the app. It's defined on the usual `Dockerfile` on the root of the repo.
+The image is intended to be deployed, so it exports things like `NODE_ENV=production`.
 
 ### Building the images
 
 From the root of the repo:
 ```
-$ docker build -t <some-nice-tag> -f Dockerfile.server .
+$ docker build -t <some-nice-tag>  .
 ```
-for `<some-nice-tag>`, I suggest `<unixname>/hanabi-server`.
+for `<some-nice-tag>`, I suggest `<unixname>/hanabi`.
 
 Then you can run a container with:
 
 ```
-$ docker run -p 5001:5001 -d gabrielrc/hanabi-server
+$ docker run -p 8080:8080 -d <unixname>/hanabi
 ```
 
 Make sure to double check the ports on the Dockerfile.
-
-The same follows for the client image.
