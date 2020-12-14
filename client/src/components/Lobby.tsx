@@ -102,6 +102,12 @@ function WaitingRoom(props: WaitingRoomProps) {
   const { lobby, startFn, uid } = props;
   const isLeader = lobby.leader.uid === uid;
   const [copied, setCopied] = useState(false);
+  let startComponent;
+  if (isLeader) {
+    startComponent = <button onClick={startFn}>Start the game</button>;
+  } else {
+    startComponent = <p>Waiting for leader ({lobby.leader.name}) to start the game.</p>;
+  }
   return (
     <div>
       <h1> Room Code: {lobby.id}  </h1>
@@ -114,7 +120,7 @@ function WaitingRoom(props: WaitingRoomProps) {
       <ul>
         {lobby.players.map(p => <li key={p.uid}>{p.name} {p.uid === uid ? '(you)' : ''}</li>)}
       </ul>
-      {isLeader && <button onClick={startFn}>Start</button>}
+      {startComponent}
     </div>
   );
 }
