@@ -70,10 +70,11 @@ WORKDIR /hanabi
 
 # Set the environment variables
 ENV NODE_ENV production
-ENV PORT 5001
 ENV PROD_CLIENT_ROOT /hanabi/client-bin
 
 # Expose the port we serve on
+# This is ignored on Heroku. They will set another PORT.
+ENV PORT 8080
 EXPOSE ${PORT}
 
 # Copy the compiled javascript to the container
