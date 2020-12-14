@@ -11,13 +11,16 @@ export interface ICard {
     value: number,
 }
 
-export interface ILobbyPlayer {
-    name: string,
+export interface IPlayerName {
+    // Unique id
+    uid: string;
+    // Printable name, not necessarily unique
+    name: string;
 }
 
-export interface IPlayer {
+export interface IGamePlayer {
     index: number,
-    cookieHash: string,
+    name: IPlayerName,
     cardsInOrder: ICard[],
 }
 
@@ -37,16 +40,16 @@ export interface IDiscard {
 }
 
 export interface IGame {
-    playersInOrder: IPlayer[];
+    playersInOrder: IGamePlayer[];
     currentPlaying: number;
     isLastRound: boolean;
     lastRoundRemaining: number;
-    
+
     hints: number;
     maxHints: number;
     lives: number;
     remainingCards: number;
-    
+
     fireworks: IFireworks;
     discard: IDiscard;
 
@@ -55,9 +58,10 @@ export interface IGame {
 
 export interface ILobby {
     id: string,
-    
+
     // Used to display who is in the lobby.
-    players: ILobbyPlayer[],
+    players: IPlayerName[],
+    leader: IPlayerName,
 
     game?: IGame,
 }

@@ -86,8 +86,9 @@ class Lobby {
     private publicState(): ILobby {
         return {
             id: this.#id.string(),
-            players: this.#players.valueSeq().map(p => ({ name: p.printable() })).toArray(),
+            players: this.#players.valueSeq().map(p => p.name()).toArray(),
             game: this.#game?.toPublic(),
+            leader: this.#leader.name(),
         }
     }
 

@@ -2,6 +2,7 @@ import cookie from 'cookie';
 import { PlayerCookieNotFoundError } from './errors';
 import { hash, ValueObject } from 'immutable';
 import md5 from 'md5';
+import { IPlayerName } from 'hanabi-interface';
 
 const PLAYER_COOKIE = 'hanabi_player';
 
@@ -26,6 +27,13 @@ export class Cookie implements ValueObject {
 
     md5(): string {
         return md5(this.#value);
+    }
+
+    name(): IPlayerName {
+        return {
+            "name": this.printable(),
+            "uid": this.md5(),
+        }
     }
 }
 

@@ -1,4 +1,4 @@
-import { ICard, IColor, IGame, IPlayer } from "hanabi-interface";
+import { ICard, IColor, IGame, IGamePlayer } from "hanabi-interface";
 import { Container, Row, Col } from 'react-grid-system';
 
 const env = process.env.NODE_ENV || 'development';
@@ -94,7 +94,7 @@ function Tokens(props: { lives: number, hints: number }) {
   );
 }
 
-function OtherPlayer(props: { player: IPlayer, currentPlayerIndex: number }) {
+function OtherPlayer(props: { player: IGamePlayer, currentPlayerIndex: number }) {
   const { player, currentPlayerIndex } = props;
   const currentPlaying = currentPlayerIndex === player.index;
   return <>
@@ -104,7 +104,7 @@ function OtherPlayer(props: { player: IPlayer, currentPlayerIndex: number }) {
 }
 
 interface MainPlayerProps {
-  player: IPlayer,
+  player: IGamePlayer,
   playFn: (c: ICard) => void,
   discardFn: (c: ICard) => void,
   hintFn: () => void,
@@ -134,19 +134,19 @@ function MainPlayer(props: MainPlayerProps) {
 // 4 | 5 | 6
 // 7 | 8 | 9
 // We map each index (1-based) to each player.
-function computeOtherPlayersMap(playersInOrder: IPlayer[], mainPlayerIndex: number): Map<number, IPlayer> {
+function computeOtherPlayersMap(playersInOrder: IGamePlayer[], mainPlayerIndex: number): Map<number, IGamePlayer> {
   const N = playersInOrder.length;
-  let map = new Map<number, IPlayer>();
-  if (N == 2) {
+  let map = new Map<number, IGamePlayer>();
+  if (N === 2) {
     map.set(2, playersInOrder[(mainPlayerIndex + 1) % N]);
-  } else if (N == 3) {
+  } else if (N === 3) {
     map.set(4, playersInOrder[(mainPlayerIndex + 1) % N]);
     map.set(6, playersInOrder[(mainPlayerIndex + 2) % N]);
-  } else if (N == 4) {
+  } else if (N === 4) {
     map.set(4, playersInOrder[(mainPlayerIndex + 1) % N]);
     map.set(2, playersInOrder[(mainPlayerIndex + 2) % N]);
     map.set(6, playersInOrder[(mainPlayerIndex + 3) % N]);
-  } else if (N == 5) {
+  } else if (N === 5) {
     map.set(4, playersInOrder[(mainPlayerIndex + 1) % N]);
     map.set(2, playersInOrder[(mainPlayerIndex + 2) % N]);
     map.set(3, playersInOrder[(mainPlayerIndex + 3) % N]);
@@ -177,7 +177,7 @@ function Game(props: GameProps) {
   const playerPos6 = otherPlayersMap.get(6);
 
 
-  const mainPlayerComponent = (player: IPlayer) => {
+  const mainPlayerComponent = (player: IGamePlayer) => {
     return <MainPlayer
       player={player}
       playFn={playFn}
@@ -188,7 +188,7 @@ function Game(props: GameProps) {
     />;
   }
 
-  const otherPlayerComponent = (player: IPlayer) => {
+  const otherPlayerComponent = (player: IGamePlayer) => {
     if (env === "development" && id.includes("test")) {
       return mainPlayerComponent(player);
     } else {

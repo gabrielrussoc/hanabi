@@ -21,7 +21,7 @@ function App() {
     setCookie(PLAYER_COOKIE, newCookie);
     playerCookie = newCookie; 
   }
-  const cookieHash = md5(playerCookie);
+  const uid = md5(playerCookie);
   
   return (
     <Router>
@@ -30,7 +30,7 @@ function App() {
           <Home />
         </Route>
         <Route path="/lobby/:id">
-          <LobbyWrapper cookieHash={cookieHash} />
+          <LobbyWrapper uid={uid} />
         </Route>
         <Route path="*">
           <NotFound />

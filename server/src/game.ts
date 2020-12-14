@@ -9,7 +9,7 @@ import {
 import { LobbyId } from './lobby';
 import { Cookie } from './cookie';
 import { List as ImmutableList, Map as ImmutableMap, ValueObject, hash } from 'immutable';
-import { ICard, IDiscard, IFireworks, IGame, IPlayer } from 'hanabi-interface';
+import { ICard, IDiscard, IFireworks, IGame, IGamePlayer } from 'hanabi-interface';
 
 const env = process.env.NODE_ENV || 'development';
 
@@ -158,11 +158,11 @@ export class Player {
         return this.#cardsInOrder;
     }
 
-    toPublic(): IPlayer {
+    toPublic(): IGamePlayer {
         return {
             index: this.index,
             cardsInOrder: this.#cardsInOrder.map(c => c.toPublic()).toArray(),
-            cookieHash: this.cookie.md5(),
+            name: this.cookie.name(),
         }
     }
 }

@@ -16,7 +16,7 @@ interface LobbyWrapperParams {
 }
 
 interface LobbyWrapperProps {
-  cookieHash: string,
+  uid: string,
 }
 
 enum ConnectionState {
@@ -29,7 +29,7 @@ enum ConnectionState {
 // talk to the server and pass down the tree.
 function LobbyWrapper(props: LobbyWrapperProps) {
   const { id } = useParams<LobbyWrapperParams>();
-  const { cookieHash } = props;
+  const { uid } = props;
   const socketRef = useRef<SocketIOClient.Socket | undefined>();
   const [socket, setSocket] = useState<SocketIOClient.Socket | undefined>();
   const [connection, setConnection] = useState(ConnectionState.CONNECTING);
@@ -55,7 +55,7 @@ function LobbyWrapper(props: LobbyWrapperProps) {
   }, [id]);
 
   if (socket && connection === ConnectionState.CONNECTED) {
-    return <Lobby id={id} socket={socket} cookieHash={cookieHash} />
+    return <Lobby id={id} socket={socket} uid={uid} />
   } else if (connection === ConnectionState.CONNECTING) {
     return <h1>Searching for room...</h1>;
   } else {
@@ -66,14 +66,15 @@ function LobbyWrapper(props: LobbyWrapperProps) {
 interface LobbyProps {
   id: string,
   socket: SocketIOClient.Socket,
-  cookieHash: string,
+  uid: string,
 }
 
 function Lobby(props: LobbyProps) {
-  const { id, socket, cookieHash } = props;
+  const { id, socket, uid } = props;
   const emptyLobby: ILobby = {
     id: "",
     players: [],
+    leader: { name: "", uid: "" }
   }
   const [lobby, setLobby] = useState(emptyLobby);
   socket.on('state', (lobby: ILobby) => {
@@ -82,24 +83,24 @@ function Lobby(props: LobbyProps) {
 
   const game = lobby.game;
   if (game) {
-    const playerIndex = game.playersInOrder.findIndex((p) => p.cookieHash == cookieHash);
+    const playerIndex = game.playersInOrder.findIndex((p) => p.name.uid === uid);
     // TODO: return something other than NotFound here. 
     return playerIndex !== -1 ? <Game id={id} game={game} playerIndex={playerIndex} socket={socket} /> : <NotFound />;
   } else {
-    return <WaitingRoom lobby={lobby} startFn={() => socket.emit('start')} />;
+    return <WaitingRoom lobby={lobby} uid={uid} startFn={() => socket.emit('start')} />;
   }
 }
 
 interface WaitingRoomProps {
   lobby: ILobby,
+  uid: string,
   startFn: () => void,
 }
 
 function WaitingRoom(props: WaitingRoomProps) {
-  // TODO: hide start button for non leader
   // TODO: Give feedback when game can't be started (i.e. not enough players)
-  const isLeader = true;
-  const { lobby, startFn } = props;
+  const { lobby, startFn, uid } = props;
+  const isLeader = lobby.leader.uid === uid;
   const [copied, setCopied] = useState(false);
   return (
     <div>
@@ -109,8 +110,9 @@ function WaitingRoom(props: WaitingRoomProps) {
         <button>Copy to clipboard</button>
       </CopyToClipboard>
       {copied ? <span style={{ color: 'red' }}>Copied.</span> : null}
+      <p> Players: </p>
       <ul>
-        {lobby.players.map(p => <li>{p.name}</li>)}
+        {lobby.players.map(p => <li key={p.uid}>{p.name} {p.uid === uid ? '(you)' : ''}</li>)}
       </ul>
       {isLeader && <button onClick={startFn}>Start</button>}
     </div>
