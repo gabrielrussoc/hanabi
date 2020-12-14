@@ -18,6 +18,12 @@ interface LobbyWrapperProps {
   cookieHash: string,
 }
 
+enum ConnectionState {
+  CONNECTING,
+  CONNECTED,
+  FAILED,
+}
+
 // This component holds the socket we are going to use to 
 // talk to the server and pass down the tree.
 function LobbyWrapper(props: LobbyWrapperProps) {
@@ -25,10 +31,20 @@ function LobbyWrapper(props: LobbyWrapperProps) {
   const { cookieHash } = props;
   const socketRef = useRef<SocketIOClient.Socket | undefined>();
   const [socket, setSocket] = useState<SocketIOClient.Socket | undefined>();
+  const [connection, setConnection] = useState(ConnectionState.CONNECTING);
 
   useEffect(() => {
-    socketRef.current = SocketIO({ path: '/lobby/' + id });
-    setSocket(socketRef.current);
+    if (connection === ConnectionState.CONNECTING) {
+      const timer = setTimeout(() => setConnection(ConnectionState.FAILED), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [connection]);
+
+  useEffect(() => {
+    const sock = SocketIO({ path: '/lobby/' + id });
+    sock.on('connect', () => setConnection(ConnectionState.CONNECTED));
+    socketRef.current = sock;
+    setSocket(sock);
 
     return () => {
       if (socketRef.current) {
@@ -37,10 +53,12 @@ function LobbyWrapper(props: LobbyWrapperProps) {
     }
   }, [id]);
 
-  if (socket) {
+  if (socket && connection === ConnectionState.CONNECTED) {
     return <Lobby id={id} socket={socket} cookieHash={cookieHash} />
+  } else if (connection === ConnectionState.CONNECTING) {
+    return <h1>Searching for room...</h1>;
   } else {
-    return <h1>Establishing connection to the server...</h1>;
+    return <h1>Room not found!</h1>;
   }
 }
 
@@ -53,8 +71,7 @@ interface LobbyProps {
 function Lobby(props: LobbyProps) {
   const { id, socket, cookieHash } = props;
   const emptyLobby: ILobby = {
-    // TODO: timeout here for lobby not found
-    id: "Looking for lobby...",
+    id: "",
     players: [],
   }
   const [lobby, setLobby] = useState(emptyLobby);
