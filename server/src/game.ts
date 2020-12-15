@@ -9,17 +9,9 @@ import {
 import { LobbyId } from './lobby';
 import { Cookie } from './cookie';
 import { List as ImmutableList, Map as ImmutableMap, ValueObject, hash } from 'immutable';
-import { ICard, IDiscard, IFireworks, IGame, IGamePlayer } from 'hanabi-interface';
+import { ICard, IColor, IDiscard, IFireworks, IGame, IGamePlayer } from 'hanabi-interface';
 
 const env = process.env.NODE_ENV || 'development';
-
-export enum IColor {
-    RED,
-    YELLOW,
-    GREEN,
-    BLUE,
-    WHITE
-}
 
 export class Card implements ValueObject {
     color: IColor;

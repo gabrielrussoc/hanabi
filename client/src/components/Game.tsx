@@ -29,13 +29,13 @@ function PlayableCardList(props: PlayableCardListProps) {
   const { cards, showCards, currentPlaying, playFn, discardFn, canDiscard } = props;
   return (
     <>
-      {cards.map(c => {
+      {cards.map((c, i) => {
         return (
-          <>
+          <div key={i}>
             <Card card={c} hidden={!showCards} />
             {<button onClick={() => playFn(c)} disabled={!currentPlaying}>Play</button>}
             {<button onClick={() => discardFn(c)} disabled={!currentPlaying || !canDiscard}>Discard</button>}
-          </>
+          </div>
         );
       })}
     </>
@@ -46,9 +46,9 @@ function SimpleCardList(props: { cards: ICard[] }) {
   const { cards } = props;
   return (
     <>
-      {cards.map(c => {
+      {cards.map((c, i) => {
         return (
-          <Card card={c} hidden={false} />
+          <Card key={i} card={c} hidden={false} />
         );
       })}
     </>
@@ -64,7 +64,7 @@ function Discard(props: { cardsWithCount: [ICard, number][] }) {
     }
   });
   // TODO: Use a proper component here instead of CardList
-  return <SimpleCardList cards={cards} />;
+  return <> <h1>Discard pile:</h1> <SimpleCardList cards={cards} /> </>;
 }
 
 function Fireworks(props: { colorsWithCount: [IColor, number][] }) {
@@ -72,8 +72,9 @@ function Fireworks(props: { colorsWithCount: [IColor, number][] }) {
   // TODO: return a proper component here
   return (
     <>
-      {colorsWithCount.map(([color, count]) =>
-        <div style={{ color: IColor[color], display: "inline" }}>{count}■</div>)
+      <h1> Fireworks: </h1>
+      {colorsWithCount.map(([color, count], i) =>
+        <div key={i} style={{ color: IColor[color], display: "inline" }}>{count}■</div>)
       }
     </>
   );
@@ -81,7 +82,7 @@ function Fireworks(props: { colorsWithCount: [IColor, number][] }) {
 
 function Deck(props: { cardsRemaining: number }) {
   const { cardsRemaining } = props;
-  return <h1>Cards: {cardsRemaining}</h1>
+  return <h1>Cards on deck: {cardsRemaining}</h1>
 }
 
 function Tokens(props: { lives: number, hints: number }) {
@@ -98,7 +99,7 @@ function OtherPlayer(props: { player: IGamePlayer, currentPlayerIndex: number })
   const { player, currentPlayerIndex } = props;
   const currentPlaying = currentPlayerIndex === player.index;
   return <>
-    <h1>Player {player.index} {currentPlaying ? "*" : ""}</h1>
+    <h1> {player.name.name} {currentPlaying ? "*" : ""}</h1>
     <SimpleCardList cards={player.cardsInOrder} />
   </>;
 }
@@ -115,7 +116,7 @@ interface MainPlayerProps {
 function MainPlayer(props: MainPlayerProps) {
   const { player, playFn, discardFn, hintFn, canDiscard, currentPlaying } = props;
   return <>
-    <h1>Player {player.index}</h1>
+    <h1>You {currentPlaying ? "*" : ""}</h1>
     <button onClick={hintFn} disabled={!currentPlaying}>Give hint</button>
     <br />
     <PlayableCardList
@@ -195,7 +196,7 @@ function Game(props: GameProps) {
       return <OtherPlayer player={player} currentPlayerIndex={game.currentPlaying} />;
     }
   }
-  
+
   const mainPlayer = mainPlayerComponent(game.playersInOrder[playerIndex]);
 
   return (
@@ -209,17 +210,17 @@ function Game(props: GameProps) {
     //
     // Player positions vary with the size of the game
     <Container style={{ height: "100vh" }}>
-      <Row debug style={{ height: "25%" }}>
+      <Row debug style={{ height: "33%" }}>
         <Col debug><Deck cardsRemaining={game.remainingCards} /></Col>
-        <Col debug>{playerPos2 && otherPlayerComponent(playerPos2) }</Col>
-        <Col debug>{playerPos3 && otherPlayerComponent(playerPos3) }</Col>
+        <Col debug>{playerPos2 && otherPlayerComponent(playerPos2)}</Col>
+        <Col debug>{playerPos3 && otherPlayerComponent(playerPos3)}</Col>
       </Row>
-      <Row debug style={{ height: "50%" }}>
-        <Col debug>{playerPos4 && otherPlayerComponent(playerPos4) }</Col>
+      <Row debug style={{ height: "33%" }}>
+        <Col debug>{playerPos4 && otherPlayerComponent(playerPos4)}</Col>
         <Col debug><Fireworks colorsWithCount={game.fireworks.inner} /></Col>
-        <Col debug>{playerPos6 && otherPlayerComponent(playerPos6) }</Col>
+        <Col debug>{playerPos6 && otherPlayerComponent(playerPos6)}</Col>
       </Row>
-      <Row debug style={{ height: "25%" }}>
+      <Row debug style={{ height: "33%" }}>
         <Col debug><Discard cardsWithCount={game.discard.inner} /></Col>
         <Col debug>{mainPlayer}</Col>
         <Col debug><Tokens hints={game.hints} lives={game.lives} /></Col>
