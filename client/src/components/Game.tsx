@@ -146,7 +146,7 @@ function MainPlayer(props: MainPlayerProps) {
     <PlayableCardList
       cards={player.cardsInOrder}
       currentPlaying={currentPlaying}
-      showCards={env !== "development"}
+      showCards={env === "development"}
       actions={actions}
       canDiscard={canDiscard}
       gameOver={gameOver}
