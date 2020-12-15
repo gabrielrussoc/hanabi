@@ -1,4 +1,4 @@
-import { ICard, IColor, IGame, IGamePlayer } from "hanabi-interface";
+import { ICard, IColor, IGame, IGamePlayer, IFireworks } from "hanabi-interface";
 import { Container, Row, Col } from 'react-grid-system';
 
 const env = process.env.NODE_ENV || 'development';
@@ -23,18 +23,19 @@ interface PlayableCardListProps {
   playFn: (c: ICard) => void;
   discardFn: (c: ICard) => void;
   canDiscard: boolean,
+  gameOver: boolean,
 }
 
 function PlayableCardList(props: PlayableCardListProps) {
-  const { cards, showCards, currentPlaying, playFn, discardFn, canDiscard } = props;
+  const { cards, showCards, gameOver, currentPlaying, playFn, discardFn, canDiscard } = props;
   return (
     <>
       {cards.map((c, i) => {
         return (
           <div key={i}>
             <Card card={c} hidden={!showCards} />
-            {<button onClick={() => playFn(c)} disabled={!currentPlaying}>Play</button>}
-            {<button onClick={() => discardFn(c)} disabled={!currentPlaying || !canDiscard}>Discard</button>}
+            {<button onClick={() => playFn(c)} disabled={gameOver || !currentPlaying}>Play</button>}
+            {<button onClick={() => discardFn(c)} disabled={gameOver || !currentPlaying || !canDiscard}>Discard</button>}
           </div>
         );
       })}
@@ -67,14 +68,20 @@ function Discard(props: { cardsWithCount: [ICard, number][] }) {
   return <> <h1>Discard pile:</h1> <SimpleCardList cards={cards} /> </>;
 }
 
-function Fireworks(props: { colorsWithCount: [IColor, number][] }) {
-  const { colorsWithCount } = props;
+function Fireworks(props: { fireworks: IFireworks, gameOver: boolean }) {
+  const { fireworks, gameOver } = props;
   // TODO: return a proper component here
   return (
     <>
       <h1> Fireworks: </h1>
-      {colorsWithCount.map(([color, count], i) =>
+      {fireworks.inner.map(([color, count], i) =>
         <div key={i} style={{ color: IColor[color], display: "inline" }}>{count}■</div>)
+      }
+      {
+        gameOver && <>
+          <h2>Game over!</h2>
+          <h2> Final score: {fireworks.score}</h2>
+        </>
       }
     </>
   );
@@ -111,13 +118,14 @@ interface MainPlayerProps {
   hintFn: () => void,
   canDiscard: boolean,
   currentPlaying: boolean,
+  gameOver: boolean,
 }
 
 function MainPlayer(props: MainPlayerProps) {
-  const { player, playFn, discardFn, hintFn, canDiscard, currentPlaying } = props;
+  const { player, playFn, discardFn, hintFn, canDiscard, currentPlaying, gameOver } = props;
   return <>
     <h1>You {currentPlaying ? "*" : ""}</h1>
-    <button onClick={hintFn} disabled={!currentPlaying}>Give hint</button>
+    <button onClick={hintFn} disabled={gameOver || !currentPlaying}>Give hint</button>
     <br />
     <PlayableCardList
       cards={player.cardsInOrder}
@@ -125,7 +133,8 @@ function MainPlayer(props: MainPlayerProps) {
       showCards={env === "development"}
       playFn={playFn}
       discardFn={discardFn}
-      canDiscard={canDiscard} />
+      canDiscard={canDiscard}
+      gameOver={gameOver} />
   </>;
 }
 
@@ -186,6 +195,7 @@ function Game(props: GameProps) {
       hintFn={hintFn}
       currentPlaying={game.currentPlaying === player.index}
       canDiscard={game.hints < game.maxHints}
+      gameOver={game.gameOver}
     />;
   }
 
@@ -217,7 +227,7 @@ function Game(props: GameProps) {
       </Row>
       <Row debug style={{ height: "33%" }}>
         <Col debug>{playerPos4 && otherPlayerComponent(playerPos4)}</Col>
-        <Col debug><Fireworks colorsWithCount={game.fireworks.inner} /></Col>
+        <Col debug><Fireworks fireworks={game.fireworks} gameOver={game.gameOver} /></Col>
         <Col debug>{playerPos6 && otherPlayerComponent(playerPos6)}</Col>
       </Row>
       <Row debug style={{ height: "33%" }}>
