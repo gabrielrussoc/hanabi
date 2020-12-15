@@ -1,4 +1,5 @@
 import { ICard, IColor, IGame, IGamePlayer, IFireworks } from "hanabi-interface";
+import { useEffect, useState } from "react";
 import { Container, Row, Col } from 'react-grid-system';
 
 const env = process.env.NODE_ENV || 'development';
@@ -16,6 +17,11 @@ function Card(props: CardProps) {
   return <div style={{ color: IColor[card.color], display: "inline" }}>{card.value}■</div>;
 }
 
+interface CardMoved {
+  index: number,
+  up: boolean,
+}
+
 interface Actions {
   play: (c: ICard) => void;
   discard: (c: ICard) => void;
@@ -31,10 +37,11 @@ interface PlayableCardListProps {
   actions: Actions,
   canDiscard: boolean,
   gameOver: boolean,
+  cardMoved?: CardMoved,
 }
 
 function PlayableCardList(props: PlayableCardListProps) {
-  const { cards, showCards, gameOver, currentPlaying, actions, canDiscard } = props;
+  const { cards, cardMoved, showCards, gameOver, currentPlaying, actions, canDiscard } = props;
   return (
     <>
       {cards.map((c, i) => {
@@ -45,6 +52,7 @@ function PlayableCardList(props: PlayableCardListProps) {
             {<button onClick={() => actions.discard(c)} disabled={gameOver || !currentPlaying || !canDiscard}>Discard</button>}
             {<button onClick={() => actions.moveCardUp(i)} disabled={gameOver}>Move up</button>}
             {<button onClick={() => actions.moveCardDown(i)} disabled={gameOver}>Move down</button>}
+            {cardMoved && cardMoved.index === i && `Moved ${cardMoved.up ? "up" : "down"}`}
           </div>
         );
       })}
@@ -126,10 +134,11 @@ interface MainPlayerProps {
   canDiscard: boolean,
   currentPlaying: boolean,
   gameOver: boolean,
+  cardMoved?: CardMoved,
 }
 
 function MainPlayer(props: MainPlayerProps) {
-  const { player, actions, canDiscard, currentPlaying, gameOver } = props;
+  const { player, cardMoved, actions, canDiscard, currentPlaying, gameOver } = props;
   return <>
     <h1>You {currentPlaying ? "*" : ""}</h1>
     <button onClick={actions.hint} disabled={gameOver || !currentPlaying}>Give hint</button>
@@ -140,7 +149,8 @@ function MainPlayer(props: MainPlayerProps) {
       showCards={env !== "development"}
       actions={actions}
       canDiscard={canDiscard}
-      gameOver={gameOver} />
+      gameOver={gameOver}
+      cardMoved={cardMoved} />
   </>;
 }
 
@@ -181,13 +191,27 @@ interface GameProps {
 
 function Game(props: GameProps) {
   const { id, game, playerIndex, socket } = props;
+  const [moved, setMoved] = useState<CardMoved>();
+
+  useEffect(() => {
+    if (moved) {
+      const handle = setTimeout(() => setMoved(undefined), 750);
+      return () => clearTimeout(handle);
+    }
+  });
 
   const actions = {
     play(card: ICard) { socket.emit('play', card); },
     hint() { socket.emit('hint'); },
     discard(card: ICard) { socket.emit('discard', card); },
-    moveCardUp(index: number) { socket.emit('move card', { "index": index, "left": true }); },
-    moveCardDown(index: number) {  socket.emit('move card', { "index": index, "left": false }); },
+    moveCardUp(index: number) {
+      socket.emit('move card', { "index": index, "left": true });
+      setMoved({ "index": index, "up": true });
+    },
+    moveCardDown(index: number) {
+      socket.emit('move card', { "index": index, "left": false });
+      setMoved({ "index": index, "up": false });
+    },
   }
 
   const otherPlayersMap = computeOtherPlayersMap(game.playersInOrder, playerIndex);
@@ -204,6 +228,7 @@ function Game(props: GameProps) {
       currentPlaying={game.currentPlaying === player.index}
       canDiscard={game.hints < game.maxHints}
       gameOver={game.gameOver}
+      cardMoved={moved}
     />;
   }
 
