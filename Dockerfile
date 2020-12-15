@@ -81,6 +81,8 @@ EXPOSE ${PORT}
 COPY --from=server-builder hanabi-server/bin/ bin/
 COPY --from=server-builder hanabi-server/node_modules/ node_modules/
 COPY --from=server-builder hanabi-server/package.json package.json
+# Make sure to include the interface (the server and client have a symlink to it)
+COPY --from=server-builder /interface /interface
 # Make sure to include the client files
 COPY --from=client-builder hanabi-client/build/ client-bin/
 
