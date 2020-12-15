@@ -10,6 +10,12 @@ export class WrongTurnError extends Error {
     }
 }
 
+export class GameOverError extends Error {
+    constructor() {
+        super("Game is already over.");
+    }
+}
+
 export class NotEnoughHintsError extends Error {
     constructor(m: string) {
         super(m);

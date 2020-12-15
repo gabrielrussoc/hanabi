@@ -4,7 +4,8 @@ import {
     NotEnoughHintsError,
     TooManyHintsToDiscardError,
     UnknownPlayerError,
-    WrongTurnError
+    WrongTurnError,
+    GameOverError,
 } from './errors';
 import { LobbyId } from './lobby';
 import { Cookie } from './cookie';
@@ -250,6 +251,9 @@ export class Game {
         }
         if (this.#currentPlaying !== player.index) {
             throw new WrongTurnError("It's not your turn!");
+        }
+        if (this.gameOver() != null) {
+            throw new GameOverError();
         }
     }
 
