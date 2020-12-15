@@ -65,3 +65,9 @@ export interface ILobby {
 
     game?: IGame,
 }
+
+export interface ICardMove {
+    index: number,
+    // Whether to move the card left or right
+    left: boolean,
+}

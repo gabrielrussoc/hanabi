@@ -16,26 +16,35 @@ function Card(props: CardProps) {
   return <div style={{ color: IColor[card.color], display: "inline" }}>{card.value}■</div>;
 }
 
+interface Actions {
+  play: (c: ICard) => void;
+  discard: (c: ICard) => void;
+  hint: () => void,
+  moveCardUp: (i: number) => void,
+  moveCardDown: (i: number) => void,
+}
+
 interface PlayableCardListProps {
   cards: ICard[],
   showCards: boolean,
   currentPlaying: boolean,
-  playFn: (c: ICard) => void;
-  discardFn: (c: ICard) => void;
+  actions: Actions,
   canDiscard: boolean,
   gameOver: boolean,
 }
 
 function PlayableCardList(props: PlayableCardListProps) {
-  const { cards, showCards, gameOver, currentPlaying, playFn, discardFn, canDiscard } = props;
+  const { cards, showCards, gameOver, currentPlaying, actions, canDiscard } = props;
   return (
     <>
       {cards.map((c, i) => {
         return (
           <div key={i}>
             <Card card={c} hidden={!showCards} />
-            {<button onClick={() => playFn(c)} disabled={gameOver || !currentPlaying}>Play</button>}
-            {<button onClick={() => discardFn(c)} disabled={gameOver || !currentPlaying || !canDiscard}>Discard</button>}
+            {<button onClick={() => actions.play(c)} disabled={gameOver || !currentPlaying}>Play</button>}
+            {<button onClick={() => actions.discard(c)} disabled={gameOver || !currentPlaying || !canDiscard}>Discard</button>}
+            {<button onClick={() => actions.moveCardUp(i)} disabled={gameOver}>Move up</button>}
+            {<button onClick={() => actions.moveCardDown(i)} disabled={gameOver}>Move down</button>}
           </div>
         );
       })}
@@ -113,26 +122,23 @@ function OtherPlayer(props: { player: IGamePlayer, currentPlayerIndex: number })
 
 interface MainPlayerProps {
   player: IGamePlayer,
-  playFn: (c: ICard) => void,
-  discardFn: (c: ICard) => void,
-  hintFn: () => void,
+  actions: Actions,
   canDiscard: boolean,
   currentPlaying: boolean,
   gameOver: boolean,
 }
 
 function MainPlayer(props: MainPlayerProps) {
-  const { player, playFn, discardFn, hintFn, canDiscard, currentPlaying, gameOver } = props;
+  const { player, actions, canDiscard, currentPlaying, gameOver } = props;
   return <>
     <h1>You {currentPlaying ? "*" : ""}</h1>
-    <button onClick={hintFn} disabled={gameOver || !currentPlaying}>Give hint</button>
+    <button onClick={actions.hint} disabled={gameOver || !currentPlaying}>Give hint</button>
     <br />
     <PlayableCardList
       cards={player.cardsInOrder}
       currentPlaying={currentPlaying}
-      showCards={env === "development"}
-      playFn={playFn}
-      discardFn={discardFn}
+      showCards={env !== "development"}
+      actions={actions}
       canDiscard={canDiscard}
       gameOver={gameOver} />
   </>;
@@ -176,9 +182,13 @@ interface GameProps {
 function Game(props: GameProps) {
   const { id, game, playerIndex, socket } = props;
 
-  const playFn = (card: ICard) => socket.emit('play', card);
-  const discardFn = (card: ICard) => socket.emit('discard', card);
-  const hintFn = () => socket.emit('hint');
+  const actions = {
+    play(card: ICard) { socket.emit('play', card); },
+    hint() { socket.emit('hint'); },
+    discard(card: ICard) { socket.emit('discard', card); },
+    moveCardUp(index: number) { socket.emit('move card', { "index": index, "left": true }); },
+    moveCardDown(index: number) {  socket.emit('move card', { "index": index, "left": false }); },
+  }
 
   const otherPlayersMap = computeOtherPlayersMap(game.playersInOrder, playerIndex);
   const playerPos2 = otherPlayersMap.get(2);
@@ -190,9 +200,7 @@ function Game(props: GameProps) {
   const mainPlayerComponent = (player: IGamePlayer) => {
     return <MainPlayer
       player={player}
-      playFn={playFn}
-      discardFn={discardFn}
-      hintFn={hintFn}
+      actions={actions}
       currentPlaying={game.currentPlaying === player.index}
       canDiscard={game.hints < game.maxHints}
       gameOver={game.gameOver}

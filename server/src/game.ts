@@ -10,7 +10,7 @@ import {
 import { LobbyId } from './lobby';
 import { Cookie } from './cookie';
 import { List as ImmutableList, Map as ImmutableMap, ValueObject, hash } from 'immutable';
-import { ICard, IColor, IDiscard, IFireworks, IGame, IGamePlayer } from 'hanabi-interface';
+import { ICard, IColor, IDiscard, IFireworks, IGame, IGamePlayer, ICardMove } from 'hanabi-interface';
 
 const env = process.env.NODE_ENV || 'development';
 
@@ -149,6 +149,16 @@ export class Player {
 
     cards(): ImmutableList<Card> {
         return this.#cardsInOrder;
+    }
+
+    moveCard(cardMove: ICardMove) {
+        const {index, left} = cardMove;
+        const card = this.#cardsInOrder.get(index);
+        if (card == null) {
+            throw new CardNotFoundError("Invalid card to move");
+        }
+        const newIndex = Math.min(Math.max(0, index - (left? 1 : -1)), this.#cardsInOrder.size - 1);
+        this.#cardsInOrder = this.#cardsInOrder.delete(index).insert(newIndex, card);
     }
 
     toPublic(): IGamePlayer {
@@ -301,6 +311,10 @@ export class Game {
             return player;
         }
         throw new UnknownPlayerError('Player ' + cookie.printable() + ' is unknown to ' + this.id.string());
+    }
+
+    moveCard(player: Player, move: ICardMove) {
+        player.moveCard(move);
     }
 
     // Plays a card. Throws if invalid.
