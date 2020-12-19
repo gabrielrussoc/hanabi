@@ -290,7 +290,7 @@ export class Game {
     }
 
     private bumpHints() {
-        this.#hints = Math.max(this.#hints + 1, this.#MAX_HINTS);
+        this.#hints = Math.min(this.#hints + 1, this.#MAX_HINTS);
     }
 
     private removeAndDraw(player: Player, card: Card) {
