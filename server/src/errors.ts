@@ -34,18 +34,6 @@ export class PlayerCookieNotFoundError extends Error {
     }
 }
 
-export class TooManyPlayersError extends Error {
-    constructor(m: string) {
-        super(m);
-    }
-}
-
-export class GameInProgressError extends Error {
-    constructor(m: string) {
-        super(m);
-    }
-}
-
 export class TooManyHintsToDiscardError extends Error {
     constructor(m: string) {
         super(m);

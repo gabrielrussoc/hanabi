@@ -8,7 +8,6 @@ import { useRef, useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import SocketIO from 'socket.io-client';
 import Game from './Game';
-import NotFound from "./NotFound";
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 
 interface LobbyWrapperParams {
@@ -83,9 +82,11 @@ function Lobby(props: LobbyProps) {
 
   const game = lobby.game;
   if (game) {
-    const playerIndex = game.playersInOrder.findIndex((p) => p.name.uid === uid);
-    // TODO: return something other than NotFound here. 
-    return playerIndex !== -1 ? <Game id={id} game={game} playerIndex={playerIndex} socket={socket} /> : <NotFound />;
+    let playerIndex: number | undefined = game.playersInOrder.findIndex((p) => p.name.uid === uid);
+    if (playerIndex === -1) {
+      playerIndex = undefined;
+    }
+    return <Game id={id} game={game} playerIndex={playerIndex} socket={socket} />;
   } else {
     return <WaitingRoom lobby={lobby} uid={uid} startFn={() => socket.emit('start')} />;
   }

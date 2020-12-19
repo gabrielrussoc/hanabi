@@ -2,7 +2,6 @@ import { Server as SocketServer, Socket } from "socket.io";
 import { Server as HttpServer } from "http";
 import { Cookie, playerCookieFromRaw } from "./cookie";
 import { Card, Game, Player } from "./game";
-import { GameInProgressError, TooManyPlayersError } from "./errors";
 import { Set as ImmutableSet } from 'immutable';
 import { ICard, ILobby, ICardMove } from 'hanabi-interface';
 
@@ -10,6 +9,12 @@ const MIN_PLAYERS = 2;
 const MAX_PLAYERS = 5;
 
 const env = process.env.NODE_ENV || 'development';
+
+enum PlayedAddStatus {
+    NOT_ADDED,
+    ADDED_TO_GAME,
+    ADDED_AS_SPECTATOR,
+}
 
 export class LobbyId {
     #value: string;
@@ -49,6 +54,7 @@ class Lobby {
 
     // Players connected
     #players: ImmutableSet<Cookie> = ImmutableSet();
+    #spectators: ImmutableSet<Cookie> = ImmutableSet();
 
     // A player can be added if:
     // - The number of players hasn't reached the maximum
@@ -58,24 +64,30 @@ class Lobby {
     //
     // Caveat: if we are trying to add a player which is already on the game,
     // this method does nothing.
-    private maybeAddPlayer(player: Cookie) {
+    private maybeAddPlayer(player: Cookie): PlayedAddStatus {
         if (this.#players.has(player)) {
             // Nothing to do. Player is just reconnecting.
-            return;
+            return PlayedAddStatus.ADDED_TO_GAME;
         }
         if (this.#gameStarted) {
-            throw new GameInProgressError("Player " + player.printable() + " is unknown to " + this.#id.string());
+            this.#spectators = this.#spectators.add(player);
+            return PlayedAddStatus.ADDED_AS_SPECTATOR;
         }
         if (this.#players.size === MAX_PLAYERS) {
-            throw new TooManyPlayersError("Lobby is full");
+            return PlayedAddStatus.NOT_ADDED;
         }
         console.log(player.printable() + ' is a new player');
         this.#players = this.#players.add(player);
+        return PlayedAddStatus.ADDED_TO_GAME;
     }
 
     // Only removes players from games that were not started.
     // This is useful to allow reconnects.
     private maybeRemovePlayer(player: Cookie) {
+        if (this.#spectators.has(player)) {
+            this.#spectators = this.#spectators.remove(player);
+            return;
+        }
         if (this.#gameStarted) {
             // Nothing to do. Player disconnected but might still come back.
             return;
@@ -99,7 +111,12 @@ class Lobby {
             const playerCookie = playerCookieFromRaw(socket.handshake.headers.cookie);
             console.log('user ' + playerCookie.printable() + ' connected to ' + this.#id.string());
             console.log('total players ' + this.#players.size);
-            this.maybeAddPlayer(playerCookie);
+            const status = this.maybeAddPlayer(playerCookie);
+            if (status === PlayedAddStatus.NOT_ADDED) {
+                console.log(`user ${playerCookie.printable()} was rejected`);
+                socket.disconnect(true);
+                return;
+            }
             io.emit('state', this.publicState());
 
             socket.on('disconnect', () => {
@@ -107,6 +124,10 @@ class Lobby {
                 this.maybeRemovePlayer(playerCookie);
                 io.emit('state', this.publicState());
             });
+
+            if(status === PlayedAddStatus.ADDED_AS_SPECTATOR) {
+                return;
+            }
 
             // If this is the leader, we also register an start handler
             if (playerCookie.equals(this.#leader)) {

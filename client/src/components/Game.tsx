@@ -185,7 +185,7 @@ function computeOtherPlayersMap(playersInOrder: IGamePlayer[], mainPlayerIndex: 
 interface GameProps {
   id: string,
   game: IGame,
-  playerIndex: number,
+  playerIndex?: number,
   socket: SocketIOClient.Socket,
 }
 
@@ -214,7 +214,7 @@ function Game(props: GameProps) {
     },
   }
 
-  const otherPlayersMap = computeOtherPlayersMap(game.playersInOrder, playerIndex);
+  const otherPlayersMap = computeOtherPlayersMap(game.playersInOrder, playerIndex ?? 0);
   const playerPos2 = otherPlayersMap.get(2);
   const playerPos3 = otherPlayersMap.get(3);
   const playerPos4 = otherPlayersMap.get(4);
@@ -240,7 +240,14 @@ function Game(props: GameProps) {
     }
   }
 
-  const mainPlayer = mainPlayerComponent(game.playersInOrder[playerIndex]);
+  const mainPlayer = (() => {
+    if (playerIndex != null) {
+      return mainPlayerComponent(game.playersInOrder[playerIndex]);
+    } else {
+      // In this case, we're expectating
+      return <OtherPlayer player={game.playersInOrder[0]} currentPlayerIndex={game.currentPlaying} />;
+    }
+  })();
 
   return (
     // The game is drawn on 3x3 grid
