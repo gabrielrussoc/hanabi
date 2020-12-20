@@ -1,5 +1,7 @@
 # Hanabi
 
+Play at: https://game-hanabi.herokuapp.com/
+
 How to play: https://youtu.be/4bqSWF2DF6I
 
 ## Build from scratch
