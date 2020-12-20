@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlay, faTrash, faCaretLeft, faCaretRight } from '@fortawesome/free-solid-svg-icons'
+import { faPlay, faTrash, faCaretLeft, faCaretRight, faLightbulb } from '@fortawesome/free-solid-svg-icons'
 import { ICard, IColor, IGame, IGamePlayer, IFireworks } from "hanabi-interface";
 import { useEffect, useState } from "react";
 import { Container, Row, Col } from 'react-grid-system';
@@ -216,8 +216,6 @@ function MainPlayer(props: MainPlayerProps) {
   const disableHint = !canHint || gameOver || !currentPlaying;
   return <>
     <h1>You {currentPlaying ? "*" : ""}</h1>
-    <button onClick={actions.hint} disabled={disableHint}>Give hint</button>
-    <br />
     <PlayableCardList
       cards={player.cardsInOrder}
       currentPlaying={currentPlaying}
@@ -226,6 +224,11 @@ function MainPlayer(props: MainPlayerProps) {
       canDiscard={canDiscard}
       gameOver={gameOver}
       cardMoved={cardMoved} />
+    <Container>
+      <button onClick={actions.hint} disabled={disableHint} style={{margin: "0 auto", display: "block"}}>
+        <FontAwesomeIcon icon={faLightbulb} /> Hint
+      </button>
+    </Container>
   </>;
 }
 
