@@ -111,9 +111,13 @@ export class Discard {
     }
 
     toPublic(): IDiscard {
-        // TODO: guarantee ordering is consistent
         return {
-            inner: this.#inner.toArray(),
+            inner: this.#inner.toArray().sort((a: [Card, number], b: [Card, number]) => {
+                const lhs = a[0];
+                const rhs = b[0];
+                if (lhs.color === rhs.color) return lhs.value - rhs.value;
+                return lhs.color - rhs.color;
+            }),
         }
     }
 }
