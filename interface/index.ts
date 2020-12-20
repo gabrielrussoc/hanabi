@@ -9,6 +9,8 @@ export enum IColor {
 export interface ICard {
     color: IColor,
     value: number,
+    // Unique identifier for a card.
+    uid: string,
 }
 
 export interface IPlayerName {

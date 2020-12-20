@@ -11,12 +11,19 @@ import { LobbyId } from './lobby';
 import { Cookie } from './cookie';
 import { List as ImmutableList, Map as ImmutableMap, ValueObject, hash } from 'immutable';
 import { ICard, IColor, IDiscard, IFireworks, IGame, IGamePlayer, ICardMove } from 'hanabi-interface';
+import { uid } from 'uid';
 
 const env = process.env.NODE_ENV || 'development';
 
 export class Card implements ValueObject {
     color: IColor;
     value: number;
+
+    // We give each card a unique identifier
+    // This helps the client do things like animations
+    // We don't care about it when comparing cards.
+    // Two cards are the same if they have the same color and value.
+    #uid = uid();
 
     equals(other: Card): boolean {
         return this.value === other.value && this.color === other.color;
@@ -38,6 +45,7 @@ export class Card implements ValueObject {
         return {
             color: this.color,
             value: this.value,
+            uid: this.#uid,
         }
     }
 }
@@ -117,7 +125,7 @@ export class Discard {
                 const rhs = b[0];
                 if (lhs.color === rhs.color) return lhs.value - rhs.value;
                 return lhs.color - rhs.color;
-            }),
+            }).map(c => [c[0].toPublic(), c[1]]),
         }
     }
 }

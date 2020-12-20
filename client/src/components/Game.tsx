@@ -1,19 +1,20 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlay, faTrash, faCaretLeft, faCaretRight, faLightbulb } from '@fortawesome/free-solid-svg-icons'
 import { ICard, IColor, IGame, IGamePlayer, IFireworks } from "hanabi-interface";
-import { useEffect, useState } from "react";
 import { Container, Row, Col } from 'react-grid-system';
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { Flipper, Flipped } from 'react-flip-toolkit'
 
 const env = process.env.NODE_ENV || 'development';
 
 interface CardProps {
   card: ICard,
   hidden: boolean,
+  flipId?: string,
 }
 
 function Card(props: CardProps) {
-  const { card, hidden } = props;
+  const { card, hidden, flipId } = props;
   const style = {
     display: "inline",
     width: "100%",
@@ -23,12 +24,11 @@ function Card(props: CardProps) {
     color: hidden ? "black" : IColor[card.color],
   };
   const text = hidden ? "?■" : `${card.value}■`;
-  return <div style={style}>{text}</div>;
-}
-
-interface CardMoved {
-  index: number,
-  up: boolean,
+  return (
+    <Flipped flipId={flipId}>
+      <div style={style}>{text}</div>
+    </Flipped>
+  );
 }
 
 interface Actions {
@@ -48,10 +48,11 @@ interface PlayableCardProps {
   canPlay: boolean,
   canMove: boolean,
   actions: Actions,
+  flipId?: string,
 }
 
 function PlayableCard(props: PlayableCardProps) {
-  const { card, hidden, actions, index, canPlay, canDiscard, canMove, lastIndex } = props;
+  const { card, hidden, actions, index, canPlay, canDiscard, canMove, lastIndex, flipId } = props;
   const Action = (props: { icon: IconProp, action: () => void, disabled: boolean }) => {
     const { icon, action, disabled } = props;
     return (
@@ -63,7 +64,7 @@ function PlayableCard(props: PlayableCardProps) {
   return (
     <Container style={{ padding: "0.2em" }}>
       <Row nogutter>
-        <Card card={card} hidden={hidden} />
+        <Card card={card} hidden={hidden} flipId={flipId} />
       </Row>
       <Row nogutter>
         <Col><Action icon={faTrash} action={() => actions.discard(card)} disabled={!canDiscard} /></Col>
@@ -88,35 +89,37 @@ interface PlayableCardListProps {
   actions: Actions,
   canDiscard: boolean,
   gameOver: boolean,
-  cardMoved?: CardMoved,
 }
 
 function PlayableCardList(props: PlayableCardListProps) {
-  const { cards, cardMoved, showCards, gameOver, currentPlaying, actions, canDiscard } = props;
+  const { cards, showCards, gameOver, currentPlaying, actions, canDiscard } = props;
   const canPlayButton = !gameOver && currentPlaying;
   const canDiscardButton = canDiscard && canPlayButton;
   const canMoveButton = !gameOver;
   return (
-    <Container>
-      <Row nogutter>
-        {cards.map((card, i) => {
-          return (
-            <Col>
-              <PlayableCard
-                card={card}
-                index={i}
-                lastIndex={cards.length - 1}
-                hidden={!showCards}
-                canPlay={canPlayButton}
-                canDiscard={canDiscardButton}
-                canMove={canMoveButton}
-                actions={actions}
-              />
-            </Col>
-          );
-        })}
-      </Row>
-    </Container>
+    <Flipper flipKey={JSON.stringify(cards)}>
+      <Container>
+        <Row nogutter>
+          {cards.map((card, i) => {
+            return (
+              <Col>
+                <PlayableCard
+                  card={card}
+                  index={i}
+                  lastIndex={cards.length - 1}
+                  hidden={!showCards}
+                  canPlay={canPlayButton}
+                  canDiscard={canDiscardButton}
+                  canMove={canMoveButton}
+                  actions={actions}
+                  flipId={card.uid}
+                />
+              </Col>
+            );
+          })}
+        </Row>
+      </Container>
+    </Flipper>
   );
 }
 
@@ -208,11 +211,10 @@ interface MainPlayerProps {
   canHint: boolean,
   currentPlaying: boolean,
   gameOver: boolean,
-  cardMoved?: CardMoved,
 }
 
 function MainPlayer(props: MainPlayerProps) {
-  const { player, cardMoved, actions, canDiscard, canHint, currentPlaying, gameOver } = props;
+  const { player, actions, canDiscard, canHint, currentPlaying, gameOver } = props;
   const disableHint = !canHint || gameOver || !currentPlaying;
   return <>
     <h1>You {currentPlaying ? "*" : ""}</h1>
@@ -222,10 +224,9 @@ function MainPlayer(props: MainPlayerProps) {
       showCards={gameOver || env === "development"}
       actions={actions}
       canDiscard={canDiscard}
-      gameOver={gameOver}
-      cardMoved={cardMoved} />
+      gameOver={gameOver} />
     <Container>
-      <button onClick={actions.hint} disabled={disableHint} style={{margin: "0 auto", display: "block"}}>
+      <button onClick={actions.hint} disabled={disableHint} style={{ margin: "0 auto", display: "block" }}>
         <FontAwesomeIcon icon={faLightbulb} /> Hint
       </button>
     </Container>
@@ -269,14 +270,6 @@ interface GameProps {
 
 function Game(props: GameProps) {
   const { id, game, playerIndex, socket } = props;
-  const [moved, setMoved] = useState<CardMoved>();
-
-  useEffect(() => {
-    if (moved) {
-      const handle = setTimeout(() => setMoved(undefined), 750);
-      return () => clearTimeout(handle);
-    }
-  });
 
   const actions = {
     play(card: ICard) { socket.emit('play', card); },
@@ -284,11 +277,9 @@ function Game(props: GameProps) {
     discard(card: ICard) { socket.emit('discard', card); },
     moveCardLeft(index: number) {
       socket.emit('move card', { "index": index, "left": true });
-      setMoved({ "index": index, "up": true });
     },
     moveCardRight(index: number) {
       socket.emit('move card', { "index": index, "left": false });
-      setMoved({ "index": index, "up": false });
     },
   }
 
@@ -307,7 +298,6 @@ function Game(props: GameProps) {
       canDiscard={game.hints < game.maxHints}
       canHint={game.hints > 0}
       gameOver={game.gameOver}
-      cardMoved={moved}
     />;
   }
 
