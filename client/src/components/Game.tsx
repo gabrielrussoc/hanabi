@@ -63,14 +63,20 @@ function PlayableCardList(props: PlayableCardListProps) {
 function SimpleCardList(props: { cards: ICard[] }) {
   const { cards } = props;
   return (
-    <>
+    <div>
       {cards.map((c, i) => {
         return (
           <Card key={i} card={c} hidden={false} />
         );
       })}
-    </>
+    </div>
   );
+}
+
+// No idea how to iterate through enum and make typescript happy.
+// TODO: Don't hardcode all enum values here
+function allColors(): IColor[] {
+  return [IColor.BLUE, IColor.GREEN, IColor.RED, IColor.WHITE, IColor.YELLOW];
 }
 
 function Discard(props: { cardsWithCount: [ICard, number][] }) {
@@ -81,8 +87,14 @@ function Discard(props: { cardsWithCount: [ICard, number][] }) {
       cards.push(card);
     }
   });
-  // TODO: Use a proper component here instead of CardList
-  return <> <h1>Discard pile:</h1> <SimpleCardList cards={cards} /> </>;
+  const fromColor = (cards: ICard[], color: IColor) => cards.filter(c => c.color === color);
+  // TODO: return a proper component here
+  return (
+    <>
+      <h1>Discard pile:</h1> 
+      {allColors().map(color => <SimpleCardList cards={fromColor(cards, color)} /> )}
+    </>
+  );
 }
 
 function Fireworks(props: { fireworks: IFireworks, gameOver: boolean, lives: number }) {
