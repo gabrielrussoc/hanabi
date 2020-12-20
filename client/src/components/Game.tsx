@@ -145,16 +145,18 @@ interface MainPlayerProps {
   player: IGamePlayer,
   actions: Actions,
   canDiscard: boolean,
+  canHint: boolean,
   currentPlaying: boolean,
   gameOver: boolean,
   cardMoved?: CardMoved,
 }
 
 function MainPlayer(props: MainPlayerProps) {
-  const { player, cardMoved, actions, canDiscard, currentPlaying, gameOver } = props;
+  const { player, cardMoved, actions, canDiscard, canHint, currentPlaying, gameOver } = props;
+  const disableHint = !canHint || gameOver || !currentPlaying;
   return <>
     <h1>You {currentPlaying ? "*" : ""}</h1>
-    <button onClick={actions.hint} disabled={gameOver || !currentPlaying}>Give hint</button>
+    <button onClick={actions.hint} disabled={disableHint}>Give hint</button>
     <br />
     <PlayableCardList
       cards={player.cardsInOrder}
@@ -240,6 +242,7 @@ function Game(props: GameProps) {
       actions={actions}
       currentPlaying={game.currentPlaying === player.index}
       canDiscard={game.hints < game.maxHints}
+      canHint={game.hints > 0}
       gameOver={game.gameOver}
       cardMoved={moved}
     />;
