@@ -8,9 +8,11 @@ const PLAYER_COOKIE = 'hanabi_player';
 
 export class Cookie implements ValueObject {
     #value: string;
+    printable: string;
 
     constructor(value: string) {
         this.#value = value;
+        this.printable = value.slice(-5);
     }
 
     equals(other: Cookie): boolean {
@@ -21,17 +23,13 @@ export class Cookie implements ValueObject {
         return hash(this.#value);
     }
 
-    printable(): string {
-        return this.#value.slice(-5);
-    }
-
     md5(): string {
         return md5(this.#value);
     }
 
     name(): IPlayerName {
         return {
-            "name": this.printable(),
+            "name": this.printable,
             "uid": this.md5(),
         }
     }

@@ -76,7 +76,7 @@ class Lobby {
         if (this.#players.size === MAX_PLAYERS) {
             return PlayedAddStatus.NOT_ADDED;
         }
-        console.log(player.printable() + ' is a new player');
+        console.log(player.printable + ' is a new player');
         this.#players = this.#players.add(player);
         return PlayedAddStatus.ADDED_TO_GAME;
     }
@@ -109,18 +109,18 @@ class Lobby {
 
         io.on('connection', (socket) => {
             const playerCookie = playerCookieFromRaw(socket.handshake.headers.cookie);
-            console.log('user ' + playerCookie.printable() + ' connected to ' + this.#id.string());
+            console.log('user ' + playerCookie.printable + ' connected to ' + this.#id.string());
             console.log('total players ' + this.#players.size);
             const status = this.maybeAddPlayer(playerCookie);
             if (status === PlayedAddStatus.NOT_ADDED) {
-                console.log(`user ${playerCookie.printable()} was rejected`);
+                console.log(`user ${playerCookie.printable} was rejected`);
                 socket.disconnect(true);
                 return;
             }
             io.emit('state', this.publicState());
 
             socket.on('disconnect', () => {
-                console.log('user ' + playerCookie.printable() + ' disconnected from ' + this.#id.string());
+                console.log('user ' + playerCookie.printable + ' disconnected from ' + this.#id.string());
                 this.maybeRemovePlayer(playerCookie);
                 io.emit('state', this.publicState());
             });
@@ -131,7 +131,7 @@ class Lobby {
 
             // If this is the leader, we also register an start handler
             if (playerCookie.equals(this.#leader)) {
-                console.log('Identified ' + playerCookie.printable() + ' as leader on ' + this.#id.string());
+                console.log('Identified ' + playerCookie.printable + ' as leader on ' + this.#id.string());
                 socket.on('start', () => {
                     // TODO: return errors for invalid starts
                     if (!this.#gameStarted && this.#players.size >= MIN_PLAYERS) {
@@ -183,7 +183,12 @@ class Lobby {
                     game.moveCard(game.playerFrom(playerCookie), cardMove);
                     io.emit('state', this.publicState());
                 }
-
+            });
+            socket.on('change name', (to: string) => {
+                to = to.slice(0, 20);
+                console.log(`${playerCookie.md5()} renamed from ${playerCookie.printable} to ${to}`)
+                playerCookie.printable = to;
+                io.emit('state', this.publicState());
             });
         });
     }

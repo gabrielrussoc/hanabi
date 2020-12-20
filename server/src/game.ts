@@ -314,7 +314,7 @@ export class Game {
         if (player) {
             return player;
         }
-        throw new UnknownPlayerError('Player ' + cookie.printable() + ' is unknown to ' + this.id.string());
+        throw new UnknownPlayerError('Player ' + cookie.printable + ' is unknown to ' + this.id.string());
     }
 
     moveCard(player: Player, move: ICardMove) {
