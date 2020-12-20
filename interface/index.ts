@@ -41,6 +41,12 @@ export interface IDiscard {
     inner: [ICard, number][],
 }
 
+export interface ILastPlay {
+    playerName: IPlayerName,
+    play: "hint" | "discard" | "play",
+    card?: ICard,
+}
+
 export interface IGame {
     playersInOrder: IGamePlayer[];
     currentPlaying: number;
@@ -56,6 +62,8 @@ export interface IGame {
     discard: IDiscard;
 
     gameOver: boolean,
+
+    lastPlay?: ILastPlay,
 }
 
 export interface ILobby {

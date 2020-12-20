@@ -1,6 +1,6 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlay, faTrash, faCaretLeft, faCaretRight, faLightbulb } from '@fortawesome/free-solid-svg-icons'
-import { ICard, IColor, IGame, IGamePlayer, IFireworks } from "hanabi-interface";
+import { ICard, IColor, IGame, IGamePlayer, IFireworks, ILastPlay } from "hanabi-interface";
 import { Container, Row, Col } from 'react-grid-system';
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { Flipper, Flipped } from 'react-flip-toolkit'
@@ -185,6 +185,15 @@ function Deck(props: { cardsRemaining: number }) {
   return <h1>Cards on deck: {cardsRemaining}</h1>
 }
 
+function LastPlay(props: { lastPlay: ILastPlay }) {
+  const { lastPlay } = props;
+  return (
+    <h4>Last play:&nbsp;
+      {lastPlay.playerName.name} {lastPlay.play}ed {lastPlay.card && <Card card={lastPlay.card} hidden={false} />}
+    </h4>
+  );
+}
+
 function Tokens(props: { lives: number, hints: number }) {
   const { lives, hints } = props;
   return (
@@ -330,7 +339,10 @@ function Game(props: GameProps) {
     // Player positions vary with the size of the game
     <Container style={{ height: "100vh" }}>
       <Row debug style={{ height: "33%" }}>
-        <Col debug><Deck cardsRemaining={game.remainingCards} /></Col>
+        <Col debug>
+          <Deck cardsRemaining={game.remainingCards} />
+          {game.lastPlay && <LastPlay lastPlay={game.lastPlay} />}
+        </Col>
         <Col debug>{playerPos2 && otherPlayerComponent(playerPos2)}</Col>
         <Col debug>{playerPos3 && otherPlayerComponent(playerPos3)}</Col>
       </Row>

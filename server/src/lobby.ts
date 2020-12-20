@@ -1,7 +1,7 @@
-import { Server as SocketServer, Socket } from "socket.io";
+import { Server as SocketServer } from "socket.io";
 import { Server as HttpServer } from "http";
 import { Cookie, playerCookieFromRaw } from "./cookie";
-import { Card, Game, Player } from "./game";
+import { Card, Game } from "./game";
 import { Set as ImmutableSet } from 'immutable';
 import { ICard, ILobby, ICardMove } from 'hanabi-interface';
 
@@ -156,6 +156,11 @@ class Lobby {
                     const cookie = assumeCorrectPlayer ? game.currentPlayerCookie() : playerCookie;
                     const player = game.playerFrom(cookie);
                     game.play(player, new Card(card.color, card.value));
+                    game.setLastPlay({
+                        playerName: player.toPublic().name,
+                        play: "play",
+                        card,
+                    });
                     io.emit('state', this.publicState());
                 }
             });
@@ -165,6 +170,11 @@ class Lobby {
                     const cookie = assumeCorrectPlayer ? game.currentPlayerCookie() : playerCookie;
                     const player = game.playerFrom(cookie);
                     game.discard(player, new Card(card.color, card.value));
+                    game.setLastPlay({
+                        playerName: player.toPublic().name,
+                        play: "discard",
+                        card,
+                    });
                     io.emit('state', this.publicState());
                 }
             });
@@ -174,6 +184,10 @@ class Lobby {
                     const cookie = assumeCorrectPlayer ? game.currentPlayerCookie() : playerCookie;
                     const player = game.playerFrom(cookie);
                     game.hint(player);
+                    game.setLastPlay({
+                        playerName: player.toPublic().name,
+                        play: "hint",
+                    });
                     io.emit('state', this.publicState());
                 }
             });

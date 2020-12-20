@@ -10,7 +10,7 @@ import {
 import { LobbyId } from './lobby';
 import { Cookie } from './cookie';
 import { List as ImmutableList, Map as ImmutableMap, ValueObject, hash } from 'immutable';
-import { ICard, IColor, IDiscard, IFireworks, IGame, IGamePlayer, ICardMove } from 'hanabi-interface';
+import { ICard, IColor, IDiscard, IFireworks, IGame, IGamePlayer, ICardMove, ILastPlay } from 'hanabi-interface';
 import { uid } from 'uid';
 
 const env = process.env.NODE_ENV || 'development';
@@ -240,6 +240,8 @@ export class Game {
     #fireworks: Fireworks;
     #discard: Discard;
 
+    #lastPlay: ILastPlay | undefined;
+
     constructor(id: LobbyId, cookies: Cookie[]) {
         this.id = id;
         this.#fireworks = new Fireworks();
@@ -382,6 +384,10 @@ export class Game {
         throw new DevOnlyError("Can't access player cookies outside of dev environment");
     }
 
+    setLastPlay(play: ILastPlay) {
+        this.#lastPlay = play;
+    }
+
     toPublic(): IGame {
         return {
             playersInOrder: this.#playersInOrder.map(p => p.toPublic()),
@@ -398,6 +404,8 @@ export class Game {
             discard: this.#discard.toPublic(),
 
             gameOver: this.gameOver() !== null,
+
+            lastPlay: this.#lastPlay,
         }
     }
 }
