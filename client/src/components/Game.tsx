@@ -85,19 +85,20 @@ function Discard(props: { cardsWithCount: [ICard, number][] }) {
   return <> <h1>Discard pile:</h1> <SimpleCardList cards={cards} /> </>;
 }
 
-function Fireworks(props: { fireworks: IFireworks, gameOver: boolean }) {
-  const { fireworks, gameOver } = props;
+function Fireworks(props: { fireworks: IFireworks, gameOver: boolean, lives: number }) {
+  const { fireworks, gameOver, lives } = props;
   // TODO: return a proper component here
   return (
     <>
       <h1> Fireworks: </h1>
+      {!gameOver && <h4> Score: {fireworks.score}</h4>}
       {fireworks.inner.map(([color, count], i) =>
         <div key={i} style={{ color: IColor[color], display: "inline" }}>{count}■</div>)
       }
       {
         gameOver && <>
           <h2>Game over!</h2>
-          <h2> Final score: {fireworks.score}</h2>
+          <h2> Final score: {lives > 0 ? fireworks.score : 0}</h2>
         </>
       }
     </>
@@ -244,7 +245,7 @@ function Game(props: GameProps) {
     if (playerIndex != null) {
       return mainPlayerComponent(game.playersInOrder[playerIndex]);
     } else {
-      // In this case, we're expectating
+      // In this case, we're spectating 
       return <OtherPlayer player={game.playersInOrder[0]} currentPlayerIndex={game.currentPlaying} />;
     }
   })();
@@ -267,7 +268,7 @@ function Game(props: GameProps) {
       </Row>
       <Row debug style={{ height: "33%" }}>
         <Col debug>{playerPos4 && otherPlayerComponent(playerPos4)}</Col>
-        <Col debug><Fireworks fireworks={game.fireworks} gameOver={game.gameOver} /></Col>
+        <Col debug><Fireworks fireworks={game.fireworks} gameOver={game.gameOver} lives={game.lives} /></Col>
         <Col debug>{playerPos6 && otherPlayerComponent(playerPos6)}</Col>
       </Row>
       <Row debug style={{ height: "33%" }}>

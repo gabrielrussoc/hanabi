@@ -266,7 +266,7 @@ export class Game {
         if (this.#currentPlaying !== player.index) {
             throw new WrongTurnError("It's not your turn!");
         }
-        if (this.gameOver() != null) {
+        if (this.gameOver() !== null) {
             throw new GameOverError();
         }
     }
