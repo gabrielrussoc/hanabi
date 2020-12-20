@@ -1,6 +1,9 @@
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlay, faTrash, faCaretLeft, faCaretRight } from '@fortawesome/free-solid-svg-icons'
 import { ICard, IColor, IGame, IGamePlayer, IFireworks } from "hanabi-interface";
 import { useEffect, useState } from "react";
 import { Container, Row, Col } from 'react-grid-system';
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 const env = process.env.NODE_ENV || 'development';
 
@@ -11,10 +14,16 @@ interface CardProps {
 
 function Card(props: CardProps) {
   const { card, hidden } = props;
-  if (hidden) {
-    return <div style={{ color: "black", display: "inline" }}>?■</div>;
-  }
-  return <div style={{ color: IColor[card.color], display: "inline" }}>{card.value}■</div>;
+  const style = {
+    display: "inline",
+    width: "100%",
+    // typescript is funny. If we don't cast this it fails with
+    // a type error.
+    textAlign: "center" as "center",
+    color: hidden ? "black" : IColor[card.color],
+  };
+  const text = hidden ? "?■" : `${card.value}■`;
+  return <div style={style}>{text}</div>;
 }
 
 interface CardMoved {
@@ -26,8 +35,50 @@ interface Actions {
   play: (c: ICard) => void;
   discard: (c: ICard) => void;
   hint: () => void,
-  moveCardUp: (i: number) => void,
-  moveCardDown: (i: number) => void,
+  moveCardLeft: (i: number) => void,
+  moveCardRight: (i: number) => void,
+}
+
+interface PlayableCardProps {
+  card: ICard,
+  index: number,
+  lastIndex: number,
+  hidden: boolean,
+  canDiscard: boolean,
+  canPlay: boolean,
+  canMove: boolean,
+  actions: Actions,
+}
+
+function PlayableCard(props: PlayableCardProps) {
+  const { card, hidden, actions, index, canPlay, canDiscard, canMove, lastIndex } = props;
+  const Action = (props: { icon: IconProp, action: () => void, disabled: boolean }) => {
+    const { icon, action, disabled } = props;
+    return (
+      <button onClick={action} style={{ width: "100%" }} disabled={disabled}>
+        <FontAwesomeIcon icon={icon} />
+      </button>
+    );
+  }
+  return (
+    <Container style={{ padding: "0.2em" }}>
+      <Row nogutter>
+        <Card card={card} hidden={hidden} />
+      </Row>
+      <Row nogutter>
+        <Col><Action icon={faTrash} action={() => actions.discard(card)} disabled={!canDiscard} /></Col>
+        <Col><Action icon={faPlay} action={() => actions.play(card)} disabled={!canPlay} /></Col>
+      </Row>
+      <Row nogutter>
+        <Col>
+          <Action icon={faCaretLeft} action={() => actions.moveCardLeft(index)} disabled={!canMove || index === 0} />
+        </Col>
+        <Col>
+          <Action icon={faCaretRight} action={() => actions.moveCardRight(index)} disabled={!canMove || index === lastIndex} />
+        </Col>
+      </Row>
+    </Container>
+  );
 }
 
 interface PlayableCardListProps {
@@ -42,21 +93,30 @@ interface PlayableCardListProps {
 
 function PlayableCardList(props: PlayableCardListProps) {
   const { cards, cardMoved, showCards, gameOver, currentPlaying, actions, canDiscard } = props;
+  const canPlayButton = !gameOver && currentPlaying;
+  const canDiscardButton = canDiscard && canPlayButton;
+  const canMoveButton = !gameOver;
   return (
-    <>
-      {cards.map((c, i) => {
-        return (
-          <div key={i}>
-            <Card card={c} hidden={!showCards} />
-            {<button onClick={() => actions.play(c)} disabled={gameOver || !currentPlaying}>Play</button>}
-            {<button onClick={() => actions.discard(c)} disabled={gameOver || !currentPlaying || !canDiscard}>Discard</button>}
-            {<button onClick={() => actions.moveCardUp(i)} disabled={gameOver}>Move up</button>}
-            {<button onClick={() => actions.moveCardDown(i)} disabled={gameOver}>Move down</button>}
-            {cardMoved && cardMoved.index === i && `Moved ${cardMoved.up ? "up" : "down"}`}
-          </div>
-        );
-      })}
-    </>
+    <Container>
+      <Row nogutter>
+        {cards.map((card, i) => {
+          return (
+            <Col>
+              <PlayableCard
+                card={card}
+                index={i}
+                lastIndex={cards.length - 1}
+                hidden={!showCards}
+                canPlay={canPlayButton}
+                canDiscard={canDiscardButton}
+                canMove={canMoveButton}
+                actions={actions}
+              />
+            </Col>
+          );
+        })}
+      </Row>
+    </Container>
   );
 }
 
@@ -91,8 +151,8 @@ function Discard(props: { cardsWithCount: [ICard, number][] }) {
   // TODO: return a proper component here
   return (
     <>
-      <h1>Discard pile:</h1> 
-      {allColors().map(color => <SimpleCardList cards={fromColor(cards, color)} /> )}
+      <h1>Discard pile:</h1>
+      {allColors().map(color => <SimpleCardList cards={fromColor(cards, color)} />)}
     </>
   );
 }
@@ -219,11 +279,11 @@ function Game(props: GameProps) {
     play(card: ICard) { socket.emit('play', card); },
     hint() { socket.emit('hint'); },
     discard(card: ICard) { socket.emit('discard', card); },
-    moveCardUp(index: number) {
+    moveCardLeft(index: number) {
       socket.emit('move card', { "index": index, "left": true });
       setMoved({ "index": index, "up": true });
     },
-    moveCardDown(index: number) {
+    moveCardRight(index: number) {
       socket.emit('move card', { "index": index, "left": false });
       setMoved({ "index": index, "up": false });
     },
